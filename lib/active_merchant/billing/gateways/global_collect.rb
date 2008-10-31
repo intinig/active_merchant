@@ -19,6 +19,12 @@ module ActiveMerchant #:nodoc:
       # The name of the gateway
       self.display_name = 'GlobalCollect'
       
+      # Money is passed in cents
+      self.money_format = :cents
+      
+      # Default currency
+      self.default_currency = "EUR"
+      
       def initialize(options = {})
         requires!(options, :merchant, :ip)
         @options = options
@@ -29,20 +35,21 @@ module ActiveMerchant #:nodoc:
         post = {}
         add_invoice(post, options)
         add_creditcard(post, creditcard)        
-        add_address(post, creditcard, options)        
-        add_customer_data(post, options)
+        add_address(post, creditcard)        
+        add_customer_data(post)
         
         commit('authonly', money, post)
       end
       
       def purchase(money, creditcard, options = {})
-        commit build_request do |xml|
+        requires!(options, :order_id)
+        commit(build_request do |xml|
           xml.request do |request|
             request.action("INSERT_ORDERWITHPAYMENT")
             add_meta(request)
-            add_params(request, money, creditcard)
+            add_params(request, money, creditcard, options)
           end
-        end
+        end)
       end                       
         
       def capture(money, authorization, options = {})
@@ -50,36 +57,16 @@ module ActiveMerchant #:nodoc:
     
       private                       
             
+      def commit(request)
+        success, message, options = parse(ssl_post(test? ? TEST_URL_IP_CHECK : LIVE_URL_IP_CHECK, request))
+        Response.new(success, message, {}, options.merge(:test => test?))
+      end
+      
       def build_request(request = '', &block)
         xml = Builder::XmlMarkup.new(:target => request)
         xml.instruct!
         xml.xml &block
         request
-      end
-      
-      def add_customer_data(post, options)
-      end
-
-      def add_address(post, creditcard, options)      
-      end
-
-      def add_invoice(post, options)
-      end
-         
-      def add_payment(post, creditcard) 
-        post.payment do |payment|
-          # FIXME again
-          payment.paymentproductid("1")
-          payment.amount("2345")
-          payment.currencycode("EUR")
-          add_creditcard(payment, creditcard)
-          payment.countrycode("NL")
-          payment.languagecode("nl")
-        end
-      end
-      def add_creditcard(post, creditcard)      
-        post.creditcardnumber(creditcard.number)
-        post.expirydate("#{creditcard.month}#{creditcard.year}")
       end
       
       def add_meta(post)
@@ -90,25 +77,48 @@ module ActiveMerchant #:nodoc:
         end
       end
       
-      def add_params(post, money, creditcard)
+      def add_params(post, money, creditcard, options = {})
         post.params do
-          add_order(post, money)
-          add_payment(post, creditcard)
+          add_order(post, money, options)
+          add_payment(post, money, creditcard, options)
         end
       end
       
-      def add_order(post, money)
+      def add_order(post, money, options = {})
+        requires!(options, :order_id, :address)
+        requires!(options[:address], :country)
         post.order do
           post.orderid(options[:order_id])
-          post.amount(money)
-          # FIXME estrai da qui 
-          post.currencycode("EUR")
-          # FIXME come li determino?
-          post.countrycode("NL")
-          post.languagecode("NL")
+          post.amount(amount(money))
+          post.currencycode(options[:currency] || currency(money))
+          post.countrycode(options[:address][:country])
+          # Forcing to EN
+          post.languagecode("EN")
         end
       end
       
+      def add_payment(post, money, creditcard, options = {}) 
+        
+        post.payment do |payment|
+          payment.paymentproductid(credit_card_type(creditcard))
+          payment.amount(amount(money))
+          payment.currencycode(options[:currency] || currency(money))
+          payment.creditcardnumber(creditcard.number)
+          payment.expirydate("#{creditcard.month}#{creditcard.year}")
+          payment.countrycode(options[:address][:country])
+          payment.languagecode("EN")
+        end
+      end
+      
+      def add_customer_data(post, options)
+      end
+
+      def add_address(post, creditcard, options)      
+      end
+
+      def add_invoice(post, options)
+      end
+                                       
       def parse(body)
         response = REXML::Document.new(body).root.elements
         success = get_key_from_response(response, "RESULT") == "OK"
@@ -132,15 +142,14 @@ module ActiveMerchant #:nodoc:
         (result = response["#{root.gsub(%r(/$),'')}/#{path.gsub(%r(^/), '')}"]).nil? ? result : result.text
       end
       
-      def commit(request)
-        success, message, options = parse(ssl_post(test? ? TEST_URL_IP_CHECK : LIVE_URL_IP_CHECK, request))
-        Response.new(success, message, {}, options.merge(:test => test?))
-      end
-
       def message_from(response)
       end
       
       def post_data(action, parameters = {})
+      end
+      
+      def credit_card_type(creditcard)
+        {:visa => 1, :master => 3, :discover => 128, :american_express => 2, :jcb => 125, :switch => 117, :solo => 118,  :dankort => 123, :laser => 124}[creditcard.type]
       end
       
       # Should run against the test servers or not?

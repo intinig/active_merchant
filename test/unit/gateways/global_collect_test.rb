@@ -8,11 +8,14 @@ class GlobalCollectTest < Test::Unit::TestCase
      )
 
     @credit_card = credit_card
-    @amount = 29990
+    @amount = Money.new(29990, 'USD')
     
     @options = { 
       :order_id => '9998990013',
-      :description => 'Store Purchase'
+      :description => 'Store Purchase',
+      :address => {
+        :country => 'IT'
+      }
     }
     
     # :customer
@@ -23,37 +26,15 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
   # explorative test, not really necessary
   def test_building_successful_request
-    xml = Builder::XmlMarkup.new(:target => (output = '')) 
-    xml.instruct!
-    xml.xml do
-      xml.request do
-        xml.action("INSERT_ORDERWITHPAYMENT")
-        xml.meta do
-          xml.merchantid("1")
-          xml.ipaddress("123.123.123.123")
-          xml.version("1.0")
-        end
-        xml.params do
-          xml.order do
-            xml.orderid("9998990013")
-            xml.amount("29990")
-            xml.currencycode("EUR")
-            xml.countrycode("NL")
-            xml.languagecode("NL")
-          end
-          xml.payment do
-            xml.paymentproductid("1")
-            xml.amount("2345")
-            xml.currencycode("EUR")
-            xml.creditcardnumber("4567350000427977")
-            xml.expirydate("1206")
-            xml.countrycode("NL")
-            xml.languagecode("nl")
-          end
-        end
+    block = Proc.new do |xml|
+      xml.request do |request|
+        request.action("INSERT_ORDERWITHPAYMENT")
+        @gateway.send(:add_meta, request)
+        @gateway.send(:add_params, request, Money.new(29990, 'EUR'), CreditCard.new(:number => '4567350000427977', :type => :visa), {:order_id => '9998990013', :address => {:country => 'NL'}})
       end
     end
-    assert_equal REXML::Document.new(successful_request).inspect, REXML::Document.new(output).inspect
+    @gateway.send(:build_request, (request = ''), &block)
+    assert_equal REXML::Document.new(successful_request).inspect, REXML::Document.new(request).inspect
   end
   
   # explorative test
