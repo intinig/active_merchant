@@ -21,7 +21,7 @@ begin
   if respond_to? :gem
     gem 'actionpack'
   else
-    require_gem 'actionpack'
+    require 'actionpack'
   end
 rescue LoadError
   raise StandardError, "The view tests need ActionPack installed as gem to run"

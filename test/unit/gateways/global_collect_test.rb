@@ -4,7 +4,8 @@ class GlobalCollectTest < Test::Unit::TestCase
   def setup
     @gateway = GlobalCollectGateway.new(
       :merchant => '1',
-      :ip => '123.123.123.123'
+      :ip => '123.123.123.123',
+      :test => true
      )
 
     @credit_card = credit_card
