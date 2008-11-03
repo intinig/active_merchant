@@ -8,7 +8,7 @@ class GlobalCollectTest < Test::Unit::TestCase
       :test => true
      )
 
-    @credit_card = credit_card
+    @credit_card = credit_card(4567350000427977, :month => 12, :year => 2006, :type => :visa)
     @amount = Money.new(29990, 'USD')
     
     @options = { 
@@ -31,11 +31,11 @@ class GlobalCollectTest < Test::Unit::TestCase
       xml.request do |request|
         request.action("INSERT_ORDERWITHPAYMENT")
         @gateway.send(:add_meta, request)
-        @gateway.send(:add_params, request, Money.new(29990, 'EUR'), CreditCard.new(:number => '4567350000427977', :type => :visa), {:order_id => '9998990013', :address => {:country => 'NL'}})
+        @gateway.send(:add_params, request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
       end
     end
     @gateway.send(:build_request, (request = ''), &block)
-    assert_equal REXML::Document.new(successful_request).inspect, REXML::Document.new(request).inspect
+    assert_equal prepare_for_comparison(REXML::Document.new(successful_request).root.to_s), prepare_for_comparison(REXML::Document.new(request).root.to_s)
   end
   
   # explorative test
@@ -82,16 +82,16 @@ class GlobalCollectTest < Test::Unit::TestCase
             <AMOUNT>29990</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
             <COUNTRYCODE>NL</COUNTRYCODE>
-            <LANGUAGECODE>nl</LANGUAGECODE>
+            <LANGUAGECODE>en</LANGUAGECODE>
           </ORDER>
           <PAYMENT>
             <PAYMENTPRODUCTID>1</PAYMENTPRODUCTID>
-            <AMOUNT>2345</AMOUNT>
+            <AMOUNT>29990</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
             <CREDITCARDNUMBER>4567350000427977</CREDITCARDNUMBER>
             <EXPIRYDATE>1206</EXPIRYDATE>
             <COUNTRYCODE>NL</COUNTRYCODE>
-            <LANGUAGECODE>nl</LANGUAGECODE>
+            <LANGUAGECODE>en</LANGUAGECODE>
           </PAYMENT>
         </PARAMS>
       </REQUEST>
@@ -170,4 +170,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     XML
   end
   
+  def prepare_for_comparison(string)
+    string.gsub(/\s{2,}/, ' ').gsub(/(\/?)> </, "#{$1}><").downcase
+  end
 end

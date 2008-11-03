@@ -104,7 +104,7 @@ module ActiveMerchant #:nodoc:
           payment.amount(amount(money))
           payment.currencycode(options[:currency] || currency(money))
           payment.creditcardnumber(creditcard.number)
-          payment.expirydate("#{creditcard.month}#{creditcard.year}")
+          payment.expirydate(expiration(creditcard))
           payment.countrycode(options[:address][:country])
           payment.languagecode("EN")
         end
@@ -157,6 +157,11 @@ module ActiveMerchant #:nodoc:
         @options[:test] || super
       end
       
+      def expiration(creditcard)
+        month = creditcard.month < 10 ? "0#{creditcard.month}" : "#{creditcard.month}"
+        year = "#{creditcard.year}"[2,2]
+        month + year
+      end
     end
   end
 end
