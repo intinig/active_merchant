@@ -43,8 +43,8 @@ class GlobalCollectTest < Test::Unit::TestCase
   # explorative test, not really necessary
   def test_building_successful_request
     block = Proc.new do |xml|
-      xml.request do |request|
-        request.action("INSERT_ORDERWITHPAYMENT")
+      xml.REQUEST do |request|
+        request.ACTION("INSERT_ORDERWITHPAYMENT")
         @gateway.send(:add_meta, request)
         @gateway.send(:add_params, request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
       end
@@ -190,6 +190,6 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
   
   def prepare_for_comparison(string)
-    string.gsub(/\s{2,}/, ' ').gsub(/(\/?)> </, "#{$1}><").downcase
+    string.gsub(/\s{2,}/, ' ').gsub(/(\/?)> </, "#{$1}><")
   end
 end

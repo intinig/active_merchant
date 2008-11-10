@@ -46,8 +46,8 @@ module ActiveMerchant #:nodoc:
       def purchase(money, creditcard, options = {})
         requires!(options, :order_id)
         commit(build_request do |xml|
-          xml.request do |request|
-            request.action("INSERT_ORDERWITHPAYMENT")
+          xml.REQUEST do |request|
+            request.ACTION("INSERT_ORDERWITHPAYMENT")
             add_meta(request)
             add_params(request, money, creditcard, options)
           end
@@ -73,20 +73,20 @@ module ActiveMerchant #:nodoc:
       def build_request(request = '', &block)
         xml = Builder::XmlMarkup.new(:target => request)
         xml.instruct!
-        xml.xml &block
+        xml.XML &block
         request
       end
       
       def add_meta(post)
-        post.meta do
-          post.merchantid(@options[:merchant])
-          post.ipaddress(@options[:ip])
-          post.version("1.0")
+        post.META do
+          post.MERCHANTID(@options[:merchant])
+          post.IPADDRESS(@options[:ip])
+          post.VERSION("1.0")
         end
       end
       
       def add_params(post, money, creditcard, options = {})
-        post.params do
+        post.PARAMS do
           add_order(post, money, options)
           add_payment(post, money, creditcard, options)
         end
@@ -95,26 +95,26 @@ module ActiveMerchant #:nodoc:
       def add_order(post, money, options = {})
         requires!(options, :order_id, :address)
         requires!(options[:address], :country)
-        post.order do
-          post.orderid(options[:order_id])
-          post.amount(amount(money))
-          post.currencycode(options[:currency] || currency(money))
-          post.countrycode(options[:address][:country])
+        post.ORDER do
+          post.ORDERID(options[:order_id])
+          post.AMOUNT(amount(money))
+          post.CURRENCYCODE(options[:currency] || currency(money))
+          post.COUNTRYCODE(options[:address][:country])
           # Forcing to EN
-          post.languagecode("EN")
+          post.LANGUAGECODE("en")
         end
       end
       
       def add_payment(post, money, creditcard, options = {}) 
         
-        post.payment do |payment|
-          payment.paymentproductid(credit_card_type(creditcard))
-          payment.amount(amount(money))
-          payment.currencycode(options[:currency] || currency(money))
-          payment.creditcardnumber(creditcard.number)
-          payment.expirydate(expiration(creditcard))
-          payment.countrycode(options[:address][:country])
-          payment.languagecode("EN")
+        post.PAYMENT do |payment|
+          payment.PAYMENTPRODUCTID(credit_card_type(creditcard))
+          payment.AMOUNT(amount(money))
+          payment.CURRENCYCODE(options[:currency] || currency(money))
+          payment.CREDITCARDNUMBER(creditcard.number)
+          payment.EXPIRYDATE(expiration(creditcard))
+          payment.COUNTRYCODE(options[:address][:country])
+          payment.LANGUAGECODE("en")
         end
       end
       
