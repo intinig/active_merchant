@@ -25,6 +25,21 @@ class GlobalCollectTest < Test::Unit::TestCase
     # :currency  
     
   end
+  
+  def test_test?
+    g = GlobalCollectGateway.new(:merchant => '1', :ip => '123.123.123.123', :test => false)
+    assert ! g.send(:test?)
+    g = GlobalCollectGateway.new(:merchant => '1', :ip => '123.123.123.123', :test => true)
+    assert g.send(:test?)
+  end
+  
+  def test_global_collect_url_should_return_correct_urls    
+    assert_equal 'https://ps.gcsip.com/wdl/wdl', create_gateway.send(:global_collect_url)
+    assert_equal 'https://ps.gcsip.nl/wdl/wdl', create_gateway(true).send(:global_collect_url)
+    assert_equal 'https://ca.gcsip.com/wdl/wdl', create_gateway(false, true).send(:global_collect_url)
+    assert_equal 'https://ca.gcsip.nl/wdl/wdl', create_gateway(true, true).send(:global_collect_url)
+  end
+    
   # explorative test, not really necessary
   def test_building_successful_request
     block = Proc.new do |xml|
@@ -65,6 +80,10 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
 
   private
+  
+  def create_gateway(test = false, security = :ip_check)
+    GlobalCollectGateway.new(:merchant => '1', :ip => '123.123.123.123', :test => test, :security => security)
+  end
   
   def successful_request
     <<-XML

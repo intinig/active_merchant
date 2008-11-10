@@ -25,20 +25,22 @@ module ActiveMerchant #:nodoc:
       # Default currency
       self.default_currency = "EUR"
       
+      # You can also pass in a :security option that can be :ip_check or :client_auth
+      # it is used to check for the correct url to use
       def initialize(options = {})
         requires!(options, :merchant, :ip)
-        @options = options
+        @options = {:security => :ip_check}.merge(options)
         super
       end  
       
       def authorize(money, creditcard, options = {})
-        post = {}
-        add_invoice(post, options)
-        add_creditcard(post, creditcard)        
-        add_address(post, creditcard)        
-        add_customer_data(post)
-        
-        commit('authonly', money, post)
+        # post = {}
+        # add_invoice(post, options)
+        # add_creditcard(post, creditcard)        
+        # add_address(post, creditcard)        
+        # add_customer_data(post)
+        # 
+        # commit('authonly', money, post)
       end
       
       def purchase(money, creditcard, options = {})
@@ -56,9 +58,15 @@ module ActiveMerchant #:nodoc:
       end
     
       private                       
+      
+      def global_collect_url
+        base_url = test? ? "TEST_URL" : "LIVE_URL"
+        base_url += @options[:security] == :ip_check ? "_IP_CHECK" : "_CLIENT_AUTH"
+        self.class.const_get(base_url)
+      end
             
       def commit(request)
-        success, message, options = parse(ssl_post(test? ? TEST_URL_IP_CHECK : LIVE_URL_IP_CHECK, request))
+        success, message, options = parse(ssl_post(global_collect_url, request))
         Response.new(success, message, {}, options.merge(:test => test?))
       end
       
@@ -154,7 +162,11 @@ module ActiveMerchant #:nodoc:
       
       # Should run against the test servers or not?
       def test?
-        @options[:test] || super
+        if @options[:test].nil?
+          super
+        else
+          @options[:test]
+        end
       end
       
       def expiration(creditcard)
