@@ -55,7 +55,6 @@ exact:
 
 global_collect:
   merchant: login
-  password: password
   ip: 123.123.123.123
   
 ideal_ing_postbank:

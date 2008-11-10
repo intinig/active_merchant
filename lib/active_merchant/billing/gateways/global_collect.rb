@@ -66,13 +66,13 @@ module ActiveMerchant #:nodoc:
       end
             
       def commit(request)
-        success, message, options = parse(ssl_post(global_collect_url, request))
+        headers = { 'Content-Type' => 'text/xml'}
+        success, message, options = parse(ssl_post(global_collect_url, request, headers))
         Response.new(success, message, {}, options.merge(:test => test?))
       end
       
       def build_request(request = '', &block)
         xml = Builder::XmlMarkup.new(:target => request)
-        xml.instruct!
         xml.XML &block
         request
       end

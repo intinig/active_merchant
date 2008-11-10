@@ -45,13 +45,13 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   #   assert_equal 'REPLACE WITH GATEWAY FAILURE MESSAGE', response.message
   # end
 
-  # def test_invalid_login
-  #   gateway = GlobalCollectGateway.new(
-  #               :login => '',
-  #               :password => ''
-  #             )
-  #   assert response = gateway.purchase(@amount, @credit_card, @options)
-  #   assert_failure response
-  #   assert_equal 'REPLACE WITH FAILURE MESSAGE', response.message
-  # end
+  def test_invalid_login
+    gateway = GlobalCollectGateway.new(
+                :merchant => '',
+                :ip => '123.123.123.123'
+              )
+    assert response = gateway.purchase(@amount, @credit_card, @options)
+    assert_failure response
+    assert_equal 'NO MERCHANTID ACTION INSERT_ORDERWITHPAYMENT (130) IS NOT ALLOWED', response.message
+  end
 end
