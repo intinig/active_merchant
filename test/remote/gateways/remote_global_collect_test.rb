@@ -12,7 +12,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     
     @options = { 
       :order_id => '1',
-      :billing_address => address,
+      :address => address,
       :description => 'Store Purchase'
     }
   end
