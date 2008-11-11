@@ -8,10 +8,10 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     
     @amount = 100
     @credit_card = credit_card('4000100011112224')
-    @declined_card = credit_card('4000300011112220')
+    @declined_card = credit_card('4000377011112220')
     
     @options = { 
-      :order_id => '1',
+      :order_id => Time.now.to_i,
       :address => address,
       :description => 'Store Purchase'
     }
@@ -19,14 +19,14 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   
   def test_successful_purchase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
+    puts response.inspect
     assert_success response
-    assert_equal 'REPLACE WITH SUCCESS MESSAGE', response.message
   end
 
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal 'REPLACE WITH FAILED PURCHASE MESSAGE', response.message
+    assert_equal "REQUEST #{response.params["request_id"]} VALUE ************2220 OF FIELD CREDITCARDNUMBER DID NOT PASS THE LUHNCHECK", response.message, response.inspect
   end
 
   # def test_authorize_and_capture

@@ -18,12 +18,7 @@ class GlobalCollectTest < Test::Unit::TestCase
         :country => 'IT'
       }
     }
-    
-    # :customer
-    # :invoice
-    # :email
-    # :currency  
-    
+        
   end
   
   def test_test?
@@ -55,28 +50,52 @@ class GlobalCollectTest < Test::Unit::TestCase
   
   # explorative test
   def test_decoding_responses
-    response = REXML::Document.new(successful_purchase_response)
+    response = REXML::Document.new(successful_insert_order_with_payment_response)
     assert_equal 'OK', response.root.elements["REQUEST/RESPONSE/RESULT"].text
   end
   
-  def test_successful_purchase
-    @gateway.expects(:ssl_post).returns(successful_purchase_response)
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_insert_order_with_payment_response)
     
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_instance_of Response, response
     assert_success response
     
     # Replace with authorization number from the successful response
-    assert_nil response.authorization
+    assert_equal '123', response.authorization
     assert response.test?
   end
-
-  def test_unsuccessful_request
-    @gateway.expects(:ssl_post).returns(failed_purchase_response)
+  
+  def test_failed_authorize
+    @gateway.expects(:ssl_post).returns(failed_insert_order_with_payment_response)
     
-    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_failure response
     assert response.test?
+  end
+  
+  def test_successful_capture
+  end
+  
+  def test_failed_capture
+  end
+  
+  def test_successful_purchase
+  end
+  
+  def test_failed_purchase
+  end
+  
+  def test_successul_credit
+  end
+  
+  def test_unsuccessful_credit
+  end
+  
+  def test_successful_void
+  end
+  
+  def test_unsuccessful_void
   end
 
   private
@@ -98,6 +117,7 @@ class GlobalCollectTest < Test::Unit::TestCase
         <PARAMS>
           <ORDER>
             <ORDERID>9998990013</ORDERID>
+            <MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
             <AMOUNT>29990</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
             <COUNTRYCODE>NL</COUNTRYCODE>
@@ -118,7 +138,90 @@ class GlobalCollectTest < Test::Unit::TestCase
     XML
   end
   
-  def successful_purchase_response
+  def successful_authorize_request
+    <<-XML
+    <XML> 
+     <REQUEST> 
+      <ACTION>SET_PAYMENT</ACTION> 
+      <META> 
+       <IPADDRESS>123.123.123.123</IPADDRESS> 
+             <MERCHANTID>1</MERCHANTID> 
+             <VERSION>1.0</VERSION> 
+      </META> 
+          <PARAMS> 
+           <PAYMENT> 
+              <ORDERID>9998990011</ORDERID> 
+                <EFFORTID>1</EFFORTID> 
+                <PAYMENTPRODUCTID>701</PAYMENTPRODUCTID> 
+             </PAYMENT> 
+      </PARAMS> 
+     </REQUEST> 
+    </XML> 
+    XML
+  end
+  
+  def successul_authorize_response
+    <<-XML
+    <XML> 
+     <REQUEST> 
+        <ACTION>SET_PAYMENT</ACTION> 
+          <META> 
+           <IPADDRESS>123.123.123.123</IPADDRESS> 
+             <MERCHANTID>1</MERCHANTID> 
+             <VERSION>1.0</VERSION> 
+          </META> 
+          <PARAMS> 
+           <PAYMENT> 
+              <ORDERID>9998990011</ORDERID> 
+                <EFFORTID>1</EFFORTID> 
+                <PAYMENTPRODUCTID>701</PAYMENTPRODUCTID> 
+             </PAYMENT> 
+      </PARAMS> 
+          <RESPONSE> 
+           <RESULT>OK</RESULT> 
+           <META> 
+             <RESPONSEDATETIME>20040719145902</RESPONSEDATETIME> 
+             <REQUESTID>246</REQUESTID> 
+           </META> 
+      </RESPONSE> 
+     </REQUEST> 
+    </XML> 
+    XML
+  end
+  
+  def failed_authorize_response
+    <<-XML
+    <XML> 
+     <REQUEST> 
+        <ACTION>SET_PAYMENT</ACTION> 
+          <META> 
+           <IPADDRESS>123.123.123.123</IPADDRESS> 
+             <MERCHANTID>1</MERCHANTID> 
+             <VERSION>1.0</VERSION> 
+          </META> 
+          <PARAMS> 
+           <PAYMENT> 
+              <ORDERID>9998990011</ORDERID> 
+                <EFFORTID>1</EFFORTID> 
+                <PAYMENTPRODUCTID>701</PAYMENTPRODUCTID> 
+             </PAYMENT> 
+      </PARAMS> 
+      <RESPONSE> 
+      <RESULT>NOK</RESULT> 
+         <META> 
+          <RESPONSEDATETIME>20040719145902</RESPONSEDATETIME> 
+            <REQUESTID>246</REQUESTID> 
+         </META> 
+         <ERROR> 
+          <CODE>410110</CODE> 
+            <MESSAGE>REQUEST 257 UNKNOWN ORDER OR NOT PENDING</MESSAGE> 
+         </ERROR> 
+      </RESPONSE> 
+     </REQUEST> 
+    </XML> 
+    XML
+  end
+  def successful_insert_order_with_payment_response
     <<-XML
     <XML>
       <REQUEST>
@@ -132,6 +235,7 @@ class GlobalCollectTest < Test::Unit::TestCase
         <PARAMS>
           <ORDER>
             <ORDERID>9998990013</ORDERID>
+            <MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
             <AMOUNT>29990</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
             <COUNTRYCODE>NL</COUNTRYCODE>
@@ -162,6 +266,7 @@ class GlobalCollectTest < Test::Unit::TestCase
             <STATUSDATE>20030829171416</STATUSDATE>
             <PAYMENTREFERENCE>185800005380</PAYMENTREFERENCE>
             <ADDITIONALREFERENCE>19998990013</ADDITIONALREFERENCE>
+            <AUTHORISATIONCODE>123</AUTHORISATIONCODE>
           </ROW>
         </RESPONSE>
       </REQUEST>
@@ -169,7 +274,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     XML
   end
   
-  def failed_purchase_response
+  def failed_insert_order_with_payment_response
     <<-XML
     <?xml version="1.0"?>
     <RESPONSE>

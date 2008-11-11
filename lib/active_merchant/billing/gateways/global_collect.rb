@@ -1,4 +1,5 @@
 module ActiveMerchant #:nodoc:
+  # TOOD: Implement Customer Data
   module Billing #:nodoc:
     class GlobalCollectGateway < Gateway
       # NOTE: The AUTHORISATIONCODE has to be configured or won't be present in the response
@@ -27,6 +28,7 @@ module ActiveMerchant #:nodoc:
       
       # You can also pass in a :security option that can be :ip_check or :client_auth
       # it is used to check for the correct url to use
+      # additional options you can use: merchant_reference
       def initialize(options = {})
         requires!(options, :merchant, :ip)
         @options = {:security => :ip_check}.merge(options)
@@ -34,16 +36,7 @@ module ActiveMerchant #:nodoc:
       end  
       
       def authorize(money, creditcard, options = {})
-        # post = {}
-        # add_invoice(post, options)
-        # add_creditcard(post, creditcard)        
-        # add_address(post, creditcard)        
-        # add_customer_data(post)
-        # 
-        # commit('authonly', money, post)
-      end
-      
-      def purchase(money, creditcard, options = {})
+        # INSERT_ORDERWITHPAYMENT
         requires!(options, :order_id)
         commit(build_request do |xml|
           xml.REQUEST do |request|
@@ -52,9 +45,14 @@ module ActiveMerchant #:nodoc:
             add_params(request, money, creditcard, options)
           end
         end)
+      end
+      
+      def purchase(money, creditcard, options = {})
+        # authorize, capture
       end                       
         
       def capture(money, authorization, options = {})
+        # SET_PAYMENT
       end
     
       private                       
@@ -66,9 +64,8 @@ module ActiveMerchant #:nodoc:
       end
             
       def commit(request)
-        headers = { 'Content-Type' => 'text/xml'}
-        success, message, options = parse(ssl_post(global_collect_url, request, headers))
-        Response.new(success, message, {}, options.merge(:test => test?))
+        success, message, options = parse(ssl_post(global_collect_url, request))
+        Response.new(success, message, {:request_id => options.delete(:request_id)}, options.merge(:test => test?))
       end
       
       def build_request(request = '', &block)
@@ -97,6 +94,8 @@ module ActiveMerchant #:nodoc:
         requires!(options[:address], :country)
         post.ORDER do
           post.ORDERID(options[:order_id])
+          # Possible Global Collect bug? Requires this Key.
+          post.MERCHANTREFERENCE(options[:merchant_reference] || options[:order_id])
           post.AMOUNT(amount(money))
           post.CURRENCYCODE(options[:currency] || currency(money))
           post.COUNTRYCODE(options[:address][:country])
@@ -130,6 +129,7 @@ module ActiveMerchant #:nodoc:
       def parse(body)
         response = REXML::Document.new(body).root.elements
         success = get_key_from_response(response, "RESULT") == "OK"
+        request_id = get_key_from_response(response, "META/REQUESTID")
         message = get_key_from_response(response, "ERROR/MESSAGE")
         authorization = get_key_from_response(response, "ROW/AUTHORISATIONCODE")
         fraud_review = {
@@ -139,7 +139,7 @@ module ActiveMerchant #:nodoc:
         }
         avs_result = get_key_from_response(response, "ROW/AVSRESULT")
         cvv_result = get_key_from_response(response, "ROW/CVVRESULT")
-        [success, message, {:authorization => authorization, :fraud_review => fraud_review, :avs_result => avs_result, :cvv_result => cvv_result}]
+        [success, message, {:authorization => authorization, :fraud_review => fraud_review, :avs_result => avs_result, :cvv_result => cvv_result, :request_id => request_id}]
       end     
       
       def get_key_from_response(response, path)
