@@ -26,7 +26,7 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_unsuccessful_purchase
     assert response = @gateway.purchase(@amount, @declined_card, @options)
     assert_failure response
-    assert_equal "REQUEST #{response.params["request_id"]} VALUE ************2220 OF FIELD CREDITCARDNUMBER DID NOT PASS THE LUHNCHECK", response.message, response.inspect
+    assert_equal "REQUEST #{response.params["request_id"]} VALUE ************2220 OF FIELD CREDITCARDNUMBER DID NOT PASS THE LUHNCHECK", response.message
   end
 
   # def test_authorize_and_capture

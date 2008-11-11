@@ -35,17 +35,9 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal 'https://ca.gcsip.nl/wdl/wdl', create_gateway(true, true).send(:global_collect_url)
   end
     
-  # explorative test, not really necessary
-  def test_building_successful_request
-    block = Proc.new do |xml|
-      xml.REQUEST do |request|
-        request.ACTION("INSERT_ORDERWITHPAYMENT")
-        @gateway.send(:add_meta, request)
-        @gateway.send(:add_params, request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
-      end
-    end
-    @gateway.send(:build_request, (request = ''), &block)
-    assert_equal prepare_for_comparison(REXML::Document.new(successful_request).root.to_s), prepare_for_comparison(REXML::Document.new(request).root.to_s)
+  def test_authorize_should_build_successful_request
+    request = @gateway.send(:build_authorize_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
+    assert_equal_xml successful_authorize_request, request
   end
   
   # explorative test
@@ -74,10 +66,36 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert response.test?
   end
   
-  def test_successful_capture
+  def test_get_order_status_should_build_successful_request
+    request = @gateway.send(:build_get_order_status_request, @options[:order_id])
   end
   
-  def test_failed_capture
+  def test_capture_should_build_successful_request
+    request = @gateway.send(:build_capture_request, Money.new(29990, 'EUR'), 9998990013, 1)
+    assert_equal_xml successful_set_payment_request, request
+  end
+  
+  def test_successful_capture
+    @gateway.expects(:ssl_post).at_least(2).returns(successful_get_order_status_response, successful_set_payment_response)
+    
+    assert response = @gateway.capture(@amount, nil, @options)
+    assert_instance_of Response, response
+    assert_success response
+  end
+  
+  def test_failed_capture_wrong_order
+    @gateway.expects(:ssl_post).returns(failed_get_order_status_response)
+    
+    assert response = @gateway.capture(@amount, nil, @options)
+    assert_failure response
+  end
+  
+  def test_failed_capture_correct_order
+    @gateway.expects(:ssl_post).at_least(2).returns(successful_get_order_status_response, failed_set_payment_response)
+    
+    assert response = @gateway.capture(@amount, nil, @options)
+    assert_instance_of Response, response
+    assert_failure response
   end
   
   def test_successful_purchase
@@ -104,7 +122,115 @@ class GlobalCollectTest < Test::Unit::TestCase
     GlobalCollectGateway.new(:merchant => '1', :ip => '123.123.123.123', :test => test, :security => security)
   end
   
-  def successful_request
+  def successful_get_order_status_request
+    <<-XML
+    <XML> 
+     <REQUEST> 
+      <ACTION>GET_ORDERSTATUS</ACTION> 
+      <META> 
+       <MERCHANTID>1</MERCHANTID> 
+       <IPADDRESS>123.123.123.123</IPADDRESS> 
+       <VERSION>1.0</VERSION> 
+      </META> 
+      <PARAMS> 
+       <ORDER> 
+        <ORDERID>9998890004</ORDERID> 
+       </ORDER> 
+      </PARAMS> 
+     </REQUEST> 
+    </XML> 
+    XML
+  end
+  
+  def successful_get_order_status_response
+    <<-XML
+    <XML> 
+     <REQUEST> 
+      <ACTION>GET_ORDERSTATUS</ACTION> 
+      <META> 
+       <MERCHANTID>1</MERCHANTID> 
+       <IPADDRESS>123.123.123.123</IPADDRESS> 
+       <VERSION>1.0</VERSION> 
+       <REQUESTIPADDRESS>123.123.123.123</REQUESTIPADDRESS> 
+      </META> 
+      <PARAMS> 
+       <ORDER> 
+        <ORDERID>9998890004</ORDERID> 
+       </ORDER> 
+      </PARAMS> 
+      <RESPONSE> 
+       <RESULT>OK</RESULT> 
+       <META> 
+        <RESPONSEDATETIME>20040718145902</RESPONSEDATETIME> 
+        <REQUESTID>245</REQUESTID> 
+       </META> 
+       <ROW> 
+         <MERCHANTID>1</MERCHANTID> 
+        <ORDERID>9998890004</ORDERID> 
+        <EFFORTID>1</EFFORTID> 
+        <ATTEMPTID>1</ATTEMPTID> 
+        <PAYMENTREFERENCE>900100000010</PAYMENTREFERENCE> 
+        <MERCHANTREFERENCE></MERCHANTREFERENCE> 
+        <STATUSID>99999</STATUSID> 
+        <PAYMENTMETHODID>1</PAYMENTMETHODID>
+        <PAYMENTPRODUCTID>0</PAYMENTPRODUCTID> 
+        <CURRENCYCODE>EUR</CURRENCYCODE> 
+        <AMOUNT>2345</AMOUNT> 
+        <STATUSDATE>20030828183053</STATUSDATE> 
+        <ERRORNUMBER></ERRORNUMBER> 
+        <ERRORMESSAGE></ERRORMESSAGE> 
+       </ROW> 
+      </RESPONSE> 
+     </REQUEST> 
+    </XML> 
+    XML
+  end
+ 
+  def failed_get_order_status_response
+    <<-XML
+    <XML> 
+     <REQUEST> 
+      <ACTION>GET_ORDERSTATUS</ACTION> 
+      <META> 
+       <MERCHANTID>1</MERCHANTID> 
+       <IPADDRESS>123.123.123.123</IPADDRESS> 
+       <VERSION>1.0</VERSION> 
+       <REQUESTIPADDRESS>123.123.123.123</REQUESTIPADDRESS> 
+      </META> 
+      <PARAMS> 
+       <ORDER> 
+        <ORDERID>9998890004</ORDERID> 
+       </ORDER> 
+      </PARAMS> 
+      <RESPONSE> 
+       <RESULT>NOK</RESULT> 
+       <META> 
+        <RESPONSEDATETIME>20040718145902</RESPONSEDATETIME> 
+        <REQUESTID>245</REQUESTID> 
+       </META> 
+       <ROW> 
+         <MERCHANTID>1</MERCHANTID> 
+        <ORDERID>9998890004</ORDERID> 
+        <EFFORTID>1</EFFORTID> 
+        <ATTEMPTID>1</ATTEMPTID> 
+        <PAYMENTREFERENCE>900100000010</PAYMENTREFERENCE> 
+        <MERCHANTREFERENCE></MERCHANTREFERENCE> 
+        <STATUSID>99999</STATUSID> 
+        <PAYMENTMETHODID>1</PAYMENTMETHODID>
+        <PAYMENTPRODUCTID>0</PAYMENTPRODUCTID> 
+        <CURRENCYCODE>EUR</CURRENCYCODE> 
+        <AMOUNT>2345</AMOUNT> 
+        <STATUSDATE>20030828183053</STATUSDATE> 
+        <ERRORNUMBER></ERRORNUMBER> 
+        <ERRORMESSAGE></ERRORMESSAGE> 
+       </ROW> 
+      </RESPONSE> 
+     </REQUEST> 
+    </XML> 
+    XML
+  end
+ 
+  def successful_authorize_request
     <<-XML
     <XML>
       <REQUEST>
@@ -138,21 +264,21 @@ class GlobalCollectTest < Test::Unit::TestCase
     XML
   end
   
-  def successful_authorize_request
+  def successful_set_payment_request
     <<-XML
     <XML> 
      <REQUEST> 
       <ACTION>SET_PAYMENT</ACTION> 
       <META> 
-       <IPADDRESS>123.123.123.123</IPADDRESS> 
-             <MERCHANTID>1</MERCHANTID> 
-             <VERSION>1.0</VERSION> 
+        <MERCHANTID>1</MERCHANTID> 
+        <IPADDRESS>123.123.123.123</IPADDRESS> 
+        <VERSION>1.0</VERSION> 
       </META> 
           <PARAMS> 
            <PAYMENT> 
-              <ORDERID>9998990011</ORDERID> 
+              <ORDERID>9998990013</ORDERID> 
                 <EFFORTID>1</EFFORTID> 
-                <PAYMENTPRODUCTID>701</PAYMENTPRODUCTID> 
+                <PAYMENTPRODUCTID>1</PAYMENTPRODUCTID> 
              </PAYMENT> 
       </PARAMS> 
      </REQUEST> 
@@ -160,7 +286,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     XML
   end
   
-  def successul_authorize_response
+  def successful_set_payment_response
     <<-XML
     <XML> 
      <REQUEST> 
@@ -189,7 +315,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     XML
   end
   
-  def failed_authorize_response
+  def failed_set_payment_response
     <<-XML
     <XML> 
      <REQUEST> 
@@ -221,6 +347,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     </XML> 
     XML
   end
+  
   def successful_insert_order_with_payment_response
     <<-XML
     <XML>
@@ -296,5 +423,9 @@ class GlobalCollectTest < Test::Unit::TestCase
   
   def prepare_for_comparison(string)
     string.gsub(/\s{2,}/, ' ').gsub(/(\/?)> </, "#{$1}><")
+  end
+  
+  def assert_equal_xml(expected, actual)
+    assert_equal prepare_for_comparison(REXML::Document.new(expected).root.to_s), prepare_for_comparison(REXML::Document.new(actual).root.to_s)
   end
 end
