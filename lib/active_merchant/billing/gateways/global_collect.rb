@@ -43,7 +43,15 @@ module ActiveMerchant #:nodoc:
       end
       
       # authorize, capture
+      # some code duplication this way we avoid doing a double request since 
+      # we already have a credit card.
       def purchase(money, creditcard, options = {})
+        requires!(options, :order_id)
+        
+        response = authorize(money, creditcard, options)
+        return response unless response.success?
+        
+        commit(build_capture_request(money, options[:order_id], credit_card_type(creditcard)))
       end                       
       
       # SET_PAYMENT

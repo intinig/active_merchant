@@ -99,9 +99,27 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
   
   def test_successful_purchase
+    @gateway.expects(:ssl_post).at_least(2).returns(successful_insert_order_with_payment_response, successful_set_payment_response)
+    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
   end
   
-  def test_failed_purchase
+  def test_failed_purchase_no_authorization
+    @gateway.expects(:ssl_post).returns(failed_insert_order_with_payment_response)
+    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
+  end
+  
+  def test_failed_purchase_no_set_payment
+    @gateway.expects(:ssl_post).at_least(2).returns(successful_insert_order_with_payment_response, failed_set_payment_response)
+    
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response  
   end
   
   def test_successul_credit
