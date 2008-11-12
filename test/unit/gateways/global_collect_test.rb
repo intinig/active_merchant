@@ -121,17 +121,43 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_instance_of Response, response
     assert_failure response  
   end
+
+  def test_credit_should_build_correct_request
+    request = @gateway.send(:build_capture_request, Money.new(29990, 'EUR'), 9998990013, 1)
+    assert_equal_xml successful_set_payment_request, request
+  end
   
-  def test_successul_credit
+  def test_successful_credit
   end
   
   def test_unsuccessful_credit
+  end
+  
+  def test_void_should_build_correct_request
   end
   
   def test_successful_void
   end
   
   def test_unsuccessful_void
+  end
+  
+  def test_parse_order_should_parse_get_order_status
+    response = @gateway.send(:parse_order, successful_get_order_status_response)
+    assert_equal '9998890004', response[:order_id]
+    assert response[:success]
+    assert_equal '245', response[:request_id]
+    assert_equal '1', response[:merchant_id]
+    assert_equal '1', response[:attempt_id]
+    assert_equal '900100000010', response[:payment_reference]
+    assert_equal '123', response[:merchant_reference]
+    assert_equal '99999', response[:status_id]
+    assert_equal '1', response[:payment_method_id]
+    assert_equal '0', response[:payment_product_id]
+    assert_equal 'EUR', response[:currency_code] 
+    assert_equal '2345', response[:amount]
+    assert_equal '0', response[:error_number]
+    assert_equal '0', response[:error_message]
   end
 
   private
@@ -188,15 +214,15 @@ class GlobalCollectTest < Test::Unit::TestCase
         <EFFORTID>1</EFFORTID> 
         <ATTEMPTID>1</ATTEMPTID> 
         <PAYMENTREFERENCE>900100000010</PAYMENTREFERENCE> 
-        <MERCHANTREFERENCE></MERCHANTREFERENCE> 
+        <MERCHANTREFERENCE>123</MERCHANTREFERENCE> 
         <STATUSID>99999</STATUSID> 
         <PAYMENTMETHODID>1</PAYMENTMETHODID>
         <PAYMENTPRODUCTID>0</PAYMENTPRODUCTID> 
         <CURRENCYCODE>EUR</CURRENCYCODE> 
         <AMOUNT>2345</AMOUNT> 
         <STATUSDATE>20030828183053</STATUSDATE> 
-        <ERRORNUMBER></ERRORNUMBER> 
-        <ERRORMESSAGE></ERRORMESSAGE> 
+        <ERRORNUMBER>0</ERRORNUMBER> 
+        <ERRORMESSAGE>0</ERRORMESSAGE> 
        </ROW> 
       </RESPONSE> 
      </REQUEST> 
@@ -436,6 +462,33 @@ class GlobalCollectTest < Test::Unit::TestCase
           </MESSAGE>
       </ERROR>
     </RESPONSE>
+    XML
+  end
+  
+  def successful_do_refund_request
+    <<-XML
+    <XML> 
+        <REQUEST> 
+            <ACTION>DO_REFUND</ACTION> 
+            <META> 
+                <MERCHANTID>1</MERCHANTID> 
+                <IPADDRESS>20.60.98.38</IPADDRESS> 
+                <VERSION>1.0</VERSION> 
+            </META> 
+            <PARAMS> 
+                <PAYMENT> 
+                    <ORDERID>8800100375</ORDERID> 
+                    <MERCHANTREFERENCE></MERCHANTREFERENCE>
+                    <CURRENCYCODE>GBP</CURRENCYCODE> 
+                    <AMOUNT>300</AMOUNT> 
+                    <COUNTRYCODE>GB</COUNTRYCODE> 
+                    <PAYMENTPRODUCTID>1015</PAYMENTPRODUCTID> 
+                    <CREDITCARDNUMBER></CREDITCARDNUMBER>
+                    <EXPIRYDATE></EXPIRYDATE>
+                </PAYMENT> 
+            </PARAMS> 
+        </REQUEST> 
+    </XML> 
     XML
   end
   

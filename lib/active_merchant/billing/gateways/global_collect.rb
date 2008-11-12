@@ -58,16 +58,22 @@ module ActiveMerchant #:nodoc:
       # authorization can be anything, it won't be checked against
       def capture(money, authorization, options = {})
         requires!(options, :order_id) 
-
-        success, message, payment_product_id = parse(ssl_post(global_collect_url, build_get_order_status_request(options[:order_id])))
-        return Response.new(success, message, {}, {:test => test?}) unless success
         
-        commit(build_capture_request(money, options[:order_id], payment_product_id))        
+        order = parse_order(ssl_post(global_collect_url, build_get_order_status_request(options[:order_id])))
+        return Response.new(order[:success], order[:message], {}, {:test => test?}) unless order[:success]
+        
+        commit(build_capture_request(money, options[:order_id], order[:payment_product_id]))        
       end
     
+      # do refund
+      # set refund
+      # identification should be order_id
+      def credit(money, identification, options = {})
+        
+      end
+      
       # TODO
       # def void
-      # def credit
       
       private                             
       def build_authorize_request(money, creditcard, options)
@@ -97,6 +103,9 @@ module ActiveMerchant #:nodoc:
           end
         end
       end      
+      
+      def build_do_refund_request(order_id)
+      end
       
       def global_collect_url
         base_url = test? ? "TEST_URL" : "LIVE_URL"
@@ -202,7 +211,34 @@ module ActiveMerchant #:nodoc:
         success = get_key_from_response(response, "RESULT") == "OK"
         message = get_key_from_response(response, "ERROR/MESSAGE")
         payment_product_id = get_key_from_response(response, "ROW/PAYMENTPRODUCTID")
-        [success, message, payment_product_id]
+        order_id = get_key_from_response(response, "ROW/ORDERID")
+        request_id = get_key_from_response(response, "META/REQUESTID")
+        merchant_id = get_key_from_response(response, "ROW/MERCHANTID")
+        attempt_id = get_key_from_response(response, "ROW/ATTEMPTID")
+        payment_reference = get_key_from_response(response, "ROW/PAYMENTREFERENCE")
+        merchant_reference = get_key_from_response(response, "ROW/MERCHANTREFERENCE")
+        status_id = get_key_from_response(response, "ROW/STATUSID")
+        payment_method_id = get_key_from_response(response, "ROW/PAYMENTMETHODID")
+        currency_code = get_key_from_response(response, "ROW/CURRENCYCODE")
+        amount = get_key_from_response(response, "ROW/AMOUNT")
+        error_number = get_key_from_response(response, "ROW/ERRORNUMBER")
+        error_message = get_key_from_response(response, "ROW/ERRORMESSAGE")
+        { :success => success, 
+          :message => message,
+          :payment_product_id  => payment_product_id,
+          :order_id => order_id,
+          :request_id => request_id,
+          :merchant_id => merchant_id,
+          :attempt_id => attempt_id,
+          :payment_reference => payment_reference,
+          :merchant_reference => merchant_reference,
+          :status_id => status_id,
+          :payment_method_id => payment_method_id,
+          :currency_code => currency_code,
+          :amount => amount,
+          :error_number => error_number,
+          :error_message => error_message
+        }
       end
       
       def get_key_from_response(response, path)
