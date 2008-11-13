@@ -238,7 +238,9 @@ module ActiveMerchant #:nodoc:
       end
                                        
       def parse(body)
-        response = REXML::Document.new(body).root.elements
+        r = REXML::Document.new(body)
+        puts r.root.to_s
+        response = r.root.elements
         success = get_key_from_response(response, "RESULT") == "OK"
         request_id = get_key_from_response(response, "META/REQUESTID")
         message = get_key_from_response(response, "ERROR/MESSAGE")
