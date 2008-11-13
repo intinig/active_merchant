@@ -122,15 +122,30 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_failure response  
   end
 
-  def test_credit_should_build_correct_request
-    request = @gateway.send(:build_capture_request, Money.new(29990, 'EUR'), 9998990013, 1)
-    assert_equal_xml successful_set_payment_request, request
+  def test_credit_should_build_correct_request_step_one
+    request = @gateway.send(:build_do_refund_request, '8800100375', 'GB')
+    assert_equal_xml successful_do_refund_request, request
+  end
+
+  def test_credit_should_build_correct_request_step_two
+    request = @gateway.send(:build_set_refund_request, '8800100375', '701')
+    assert_equal_xml successful_set_refund_request, request
   end
   
   def test_successful_credit
+    @gateway.expects(:ssl_post).at_least(3).returns(successful_get_order_status_response, successful_do_refund_response, successful_set_refund_response)
+    
+    assert response = @gateway.credit(@amount, @options[:order_id])
+    assert_instance_of Response, response
+    assert_success response
   end
   
-  def test_unsuccessful_credit
+  def test_failed_credit_correct_order_wrong_something_else
+    @gateway.expects(:ssl_post).at_least(2).returns(successful_get_order_status_response, failed_do_refund_response)
+    
+    assert response = @gateway.credit(@amount, @options[:order_id])
+    assert_instance_of Response, response
+    assert_failure response      
   end
   
   def test_void_should_build_correct_request
@@ -139,7 +154,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_successful_void
   end
   
-  def test_unsuccessful_void
+  def test_failed_void
   end
   
   def test_parse_order_should_parse_get_order_status
@@ -472,22 +487,175 @@ class GlobalCollectTest < Test::Unit::TestCase
             <ACTION>DO_REFUND</ACTION> 
             <META> 
                 <MERCHANTID>1</MERCHANTID> 
-                <IPADDRESS>20.60.98.38</IPADDRESS> 
+                <IPADDRESS>123.123.123.123</IPADDRESS> 
                 <VERSION>1.0</VERSION> 
             </META> 
             <PARAMS> 
                 <PAYMENT> 
                     <ORDERID>8800100375</ORDERID> 
-                    <MERCHANTREFERENCE></MERCHANTREFERENCE>
-                    <CURRENCYCODE>GBP</CURRENCYCODE> 
-                    <AMOUNT>300</AMOUNT> 
                     <COUNTRYCODE>GB</COUNTRYCODE> 
-                    <PAYMENTPRODUCTID>1015</PAYMENTPRODUCTID> 
-                    <CREDITCARDNUMBER></CREDITCARDNUMBER>
-                    <EXPIRYDATE></EXPIRYDATE>
                 </PAYMENT> 
             </PARAMS> 
         </REQUEST> 
+    </XML> 
+    XML
+  end
+  
+  def successful_do_refund_response
+    <<-XML
+    <XML> 
+      <REQUEST> 
+        <ACTION>DO_REFUND</ACTION> 
+        <META> 
+          <IPADDRESS>123.123.123.123</IPADDRESS> 
+          <MERCHANTID>1</MERCHANTID> 
+          <VERSION>1.0</VERSION> 
+        </META> 
+        <PARAMS> 
+          <PAYMENT> 
+            <ORDERID>9998990011</ORDERID> 
+            <EFFORTID>-1</EFFORTID> 
+            <PAYMENTPRODUCTID>701</PAYMENTPRODUCTID> 
+          </PAYMENT> 
+        </PARAMS> 
+      <RESPONSE> 
+        <RESULT>OK</RESULT> 
+        <META> 
+          <REQUESTID>12845</REQUESTID> 
+          <RESPONSEDATETIME>20070426151801</RESPONSEDATETIME> 
+        </META> 
+        <ROW> 
+          <STATUSID>900</STATUSID> 
+          <EFFORTID>-2</EFFORTID> 
+          <PAYMENTREFERENCE>999101117749</PAYMENTREFERENCE> 
+          <ATTEMPTID>1</ATTEMPTID> 
+          <MERCHANTID>9991</MERCHANTID> 
+          <ORDERID>9998990011</ORDERID> 
+        </ROW> 
+      </RESPONSE> 
+    </REQUEST> 
+      
+    </XML> 
+    XML
+  end
+  
+  def failed_do_refund_response
+    <<-XML
+    <XML> 
+    <REQUEST> 
+      <ACTION>SET_REFUND</ACTION> 
+        <META> 
+          <IPADDRESS>123.123.123.123</IPADDRESS> 
+          <MERCHANTID>1</MERCHANTID> 
+          <VERSION>1.0</VERSION> 
+        </META> 
+        <PARAMS> 
+          <PAYMENT> 
+            <ORDERID>9998990011</ORDERID> 
+            <EFFORTID>-1</EFFORTID> 
+            <PAYMENTPRODUCTID>701</PAYMENTPRODUCTID> 
+          </PAYMENT> 
+        </PARAMS> 
+      <RESPONSE> 
+      <RESULT>NOK</RESULT> 
+        <META> 
+          <REQUESTID>12845</REQUESTID> 
+          <RESPONSEDATETIME>20070426151801</RESPONSEDATETIME> 
+        </META> 
+        <ROW> 
+          <STATUSID>900</STATUSID> 
+          <EFFORTID>-2</EFFORTID> 
+          <PAYMENTREFERENCE>999101117749</PAYMENTREFERENCE> 
+          <ATTEMPTID>1</ATTEMPTID> 
+          <MERCHANTID>9991</MERCHANTID> 
+          <ORDERID>9998990011</ORDERID> 
+        </ROW> 
+      </RESPONSE> 
+    </REQUEST> 
+    </XML> 
+    XML
+  end
+  
+  def successful_set_refund_request
+    <<-XML
+    <XML> 
+     <REQUEST> 
+      <ACTION>SET_REFUND</ACTION> 
+      <META> 
+             <MERCHANTID>1</MERCHANTID> 
+             <IPADDRESS>123.123.123.123</IPADDRESS> 
+             <VERSION>1.0</VERSION> 
+      </META> 
+          <PARAMS> 
+           <PAYMENT> 
+            <ORDERID>8800100375</ORDERID> 
+                <PAYMENTPRODUCTID>701</PAYMENTPRODUCTID> 
+                <EFFORTID>-1</EFFORTID> 
+             </PAYMENT> 
+      </PARAMS> 
+     </REQUEST> 
+    </XML> 
+    XML
+  end
+  
+  def successful_set_refund_response
+    <<-XML
+    <XML> 
+      <REQUEST> 
+        <ACTION>SET_PAYMENT</ACTION> 
+        <META> 
+          <IPADDRESS>123.123.123.123</IPADDRESS> 
+          <MERCHANTID>1</MERCHANTID> 
+          <VERSION>1.0</VERSION> 
+        </META> 
+        <PARAMS> 
+          <PAYMENT> 
+            <ORDERID>9998990011</ORDERID> 
+            <EFFORTID>-1</EFFORTID> 
+            <PAYMENTPRODUCTID>701</PAYMENTPRODUCTID> 
+          </PAYMENT> 
+        </PARAMS> 
+        <RESPONSE> 
+          <RESULT>OK</RESULT> 
+          <META> 
+            <RESPONSEDATETIME>20040719145902</RESPONSEDATETIME> 
+            <REQUESTID>246</REQUESTID> 
+          </META> 
+        </RESPONSE> 
+      </REQUEST> 
+    </XML> 
+    XML
+  end
+  
+  def failed_set_refund_response
+    <<-XML
+    <XML> 
+      <REQUEST> 
+        <ACTION>SET_PAYMENT</ACTION> 
+        <META> 
+          <IPADDRESS>123.123.123.123</IPADDRESS> 
+          <MERCHANTID>1</MERCHANTID> 
+          <VERSION>1.0</VERSION> 
+        </META> 
+        <PARAMS> 
+          <PAYMENT> 
+            <ORDERID>9998990011</ORDERID> 
+            <EFFORTID>-1</EFFORTID> 
+            <PAYMENTPRODUCTID>701</PAYMENTPRODUCTID> 
+          </PAYMENT> 
+        </PARAMS> 
+        <RESPONSE> 
+          <RESULT>NOK</RESULT> 
+          <META> 
+            <RESPONSEDATETIME>20040719145902</RESPONSEDATETIME> 
+            <REQUESTID>246</REQUESTID> 
+          </META> 
+          <ERROR> 
+            <CODE>410110</CODE> 
+            <MESSAGE>REQUEST 257 UNKNOWN ORDER OR NOT PENDING</MESSAGE> 
+          </ERROR> 
+        </RESPONSE> 
+      </REQUEST> 
     </XML> 
     XML
   end

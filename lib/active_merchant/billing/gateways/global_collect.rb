@@ -59,9 +59,8 @@ module ActiveMerchant #:nodoc:
       def capture(money, authorization, options = {})
         requires!(options, :order_id) 
         
-        order = parse_order(ssl_post(global_collect_url, build_get_order_status_request(options[:order_id])))
-        return Response.new(order[:success], order[:message], {}, {:test => test?}) unless order[:success]
-        
+        order = retrieve_order(options[:order_id])
+        return order if order.is_a?(Response)
         commit(build_capture_request(money, options[:order_id], order[:payment_product_id]))        
       end
     
@@ -69,13 +68,30 @@ module ActiveMerchant #:nodoc:
       # set refund
       # identification should be order_id
       def credit(money, identification, options = {})
-        
+        order = retrieve_order(identification)
+        return order if order.is_a?(Response)
+        response = commit(build_do_refund_request(identification, order[:country_code]))
+        if response.success?
+          commit(build_set_refund_request(identification, order[:payment_product_id]))
+        else
+          response
+        end
       end
       
       # TODO
       # def void
       
-      private                             
+      private  
+      
+      def retrieve_order(order_id)
+        order = parse_order(ssl_post(global_collect_url, build_get_order_status_request(order_id)))
+        if order[:success]
+          order
+        else
+          Response.new(order[:success], order[:message], {}, {:test => test?}) unless order[:success]
+        end
+      end                           
+      
       def build_authorize_request(money, creditcard, options)
         build_request do |request|
           request.ACTION("INSERT_ORDERWITHPAYMENT")
@@ -91,6 +107,33 @@ module ActiveMerchant #:nodoc:
           add_capture_params(request, order_id, payment_product_id)
         end
       end
+
+      def build_do_refund_request(order_id, country_code)
+        build_request do |request|
+          request.ACTION("DO_REFUND")
+          add_meta(request)
+          request.PARAMS do |params|
+            params.PAYMENT do |payment|
+              payment.ORDERID(order_id)
+              payment.COUNTRYCODE(country_code)
+            end
+          end
+        end
+      end
+
+      def build_set_refund_request(order_id, payment_product_id)
+        build_request do |request|
+          request.ACTION("SET_REFUND")
+          add_meta(request)
+          request.PARAMS do |params|
+            params.PAYMENT do |payment|
+              payment.ORDERID(order_id)
+              payment.PAYMENTPRODUCTID(payment_product_id)
+              payment.EFFORTID('-1')
+            end
+          end
+        end
+      end
       
       def build_get_order_status_request(order_id)
         build_request do |request|
@@ -103,10 +146,7 @@ module ActiveMerchant #:nodoc:
           end
         end
       end      
-      
-      def build_do_refund_request(order_id)
-      end
-      
+            
       def global_collect_url
         base_url = test? ? "TEST_URL" : "LIVE_URL"
         base_url += @options[:security] == :ip_check ? "_IP_CHECK" : "_CLIENT_AUTH"
