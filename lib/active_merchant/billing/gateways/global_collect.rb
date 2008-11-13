@@ -49,8 +49,15 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
         
         response = authorize(money, creditcard, options)
-        return response unless response.success?
+        # dove è finita l'etica del programmatore?
+        # dove è finito l'incapsulamento dei dati
+        if response.success? && response.fraud_review?[:fraud_result] == 'C'
+          response.instance_variable_set('@success', false)
+          response.instance_variable_set('@message', "CAN'T CAPTURE, CHALLENGED AUTHORIZATION")
+        end
         
+        return response unless response.success?
+
         commit(build_capture_request(money, options[:order_id], credit_card_type(creditcard)))
       end                       
       
@@ -290,7 +297,7 @@ module ActiveMerchant #:nodoc:
       end
             
       def credit_card_type(creditcard)
-        {:visa => 1, :master => 3, :discover => 128, :american_express => 2, :jcb => 125, :switch => 117, :solo => 118,  :dankort => 123, :laser => 124}[creditcard.type]
+        {:visa => 1, :master => 3, :discover => 128, :american_express => 2, :jcb => 125, :switch => 117, :solo => 118,  :dankort => 123, :laser => 124}[creditcard.type.to_sym]
       end
       
       # Should run against the test servers or not?

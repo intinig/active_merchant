@@ -20,20 +20,15 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
   def test_successful_authorize_and_capture
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
-    
     assert response = @gateway.capture(@amount, nil, @options)
     assert_success response
   end
   
-  def test_unsucessful_authorize_and_capture
+  def test_successful_purchase
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_success response
   end
-    
-  # def test_unsuccessful_purchase
-  #   assert response = @gateway.purchase(@amount, @declined_card, @options)
-  #   assert_failure response
-  #   assert_equal "REQUEST #{response.params["request_id"]} VALUE ************2220 OF FIELD CREDITCARDNUMBER DID NOT PASS THE LUHNCHECK", response.message
-  # end
-
+  
   def test_invalid_login
     gateway = GlobalCollectGateway.new(
                 :merchant => '',
