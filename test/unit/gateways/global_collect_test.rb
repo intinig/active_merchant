@@ -174,7 +174,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal '0', response[:error_number]
     assert_equal '0', response[:error_message]
   end
-
+  
   private
   
   def create_gateway(test = false, security = :ip_check)

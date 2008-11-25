@@ -28,7 +28,6 @@ module ActiveMerchant #:nodoc:
       
       # You can also pass in a :security option that can be :ip_check or :client_auth
       # it is used to check for the correct url to use
-      # additional options you can use: merchant_reference
       def initialize(options = {})
         requires!(options, :merchant, :ip)
         @options = {:security => :ip_check}.merge(options)
@@ -63,6 +62,7 @@ module ActiveMerchant #:nodoc:
       
       # SET_PAYMENT
       # authorization can be anything, it won't be checked against
+      # additional options you can (and should) use: merchant_reference
       def capture(money, authorization, options = {})
         requires!(options, :order_id) 
         
@@ -239,7 +239,6 @@ module ActiveMerchant #:nodoc:
                                        
       def parse(body)
         r = REXML::Document.new(body)
-        puts r.root.to_s
         response = r.root.elements
         success = get_key_from_response(response, "RESULT") == "OK"
         request_id = get_key_from_response(response, "META/REQUESTID")
