@@ -192,6 +192,11 @@ class GlobalCollectTest < Test::Unit::TestCase
     request = @gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:secure_3d => true, :order_id => '9998990013', :address => {:country => 'NL'}})
     assert_equal_xml successful_do_checkenrollment_request, request
   end
+  
+  def test_should_not_build_correct_do_checkenrollment_request_if_secure_3d_is_not_true
+    request = @gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
+    assert_equal_xml successful_authorize_request, request
+  end
   private
   
   def create_gateway(test = false, security = :ip_check)
