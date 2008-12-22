@@ -40,6 +40,14 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal_xml successful_authorize_request, request
   end
   
+  # a symbol can't start with a number. so we use secure_3d instead of 3d_secure
+  def test_authorize_should_build_correct_do_checkenrollment_request_if_secure_3d_if_true
+    # I use an other gateway because the secure_3d option is used just here
+    gateway = GlobalCollectGateway.new( :merchant => '1', :ip => '123.123.123.123', :test => true, :secure_3d => true)
+    request = gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
+    assert_equal_xml successful_do_checkenrollment_request, request
+  end
+  
   # explorative test
   def test_decoding_responses
     response = REXML::Document.new(successful_insert_order_with_payment_response)
@@ -186,15 +194,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal '2345', response[:amount]
     assert_equal '0', response[:error_number]
     assert_equal '0', response[:error_message]
-  end
-  
-  # a symbol can't start with a number. so we use secure_3d instead of 3d_secure
-  def test_should_build_correct_do_checkenrollment_request_if_secure_3d_if_true
-    # I use an other gateway because the secure_3d option is used just here
-    gateway = GlobalCollectGateway.new( :merchant => '1', :ip => '123.123.123.123', :test => true, :secure_3d => true)
-    request = gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
-    assert_equal_xml successful_do_checkenrollment_request, request
-  end
+  end    
   
   private
   
