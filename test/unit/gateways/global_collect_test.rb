@@ -78,6 +78,18 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal '123', response.authorization
     assert response.test?
   end
+  
+  def test_authorize_should_not_call_do_checkenrollment_if_secure_3d_is_false
+    @gateway.expects(:ssl_post).returns(successful_insert_order_with_payment_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    
+    assert_instance_of Response, response
+    assert_success response
+    
+    # Replace with authorization number from the successful response
+    assert_equal '123', response.authorization
+    assert response.test?
+  end
     
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_insert_order_with_payment_response)
