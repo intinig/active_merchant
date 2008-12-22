@@ -38,7 +38,11 @@ module ActiveMerchant #:nodoc:
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
                 
-        commit(build_authorize_request(money, creditcard, options))
+        response = commit(build_authorize_request(money, creditcard, options))
+        if response.success? && response.fraud_review?[:fraud_result] == 'C'
+          response = commit(build_do_checkenrollment_request(money, creditcard, options))
+        end
+        response
       end
       
       # authorize, capture
@@ -142,6 +146,14 @@ module ActiveMerchant #:nodoc:
         end
       end
       
+      def build_do_checkenrollment_request(money, creditcard, options = {})
+        build_request do |request|
+          request.ACTION("DO_CHECKENROLLMENT")
+          add_meta(request)
+          add_checkenrollment_params(request, money, creditcard, options)
+        end                        
+      end
+      
       def build_get_order_status_request(order_id)
         build_request do |request|
           request.ACTION("GET_ORDERSTATUS")
@@ -188,6 +200,12 @@ module ActiveMerchant #:nodoc:
         end
       end
       
+      def add_checkenrollment_params(post, money, creditcard, options = {})
+        post.PARAMS do
+          add_checkenrollment_payment(post, money, creditcard, options)
+        end
+      end
+      
       def add_capture_params(post, order_id, payment_product_id)
         post.PARAMS do
           post.PAYMENT do |payment|
@@ -222,6 +240,16 @@ module ActiveMerchant #:nodoc:
           payment.EXPIRYDATE(expiration(creditcard))
           payment.COUNTRYCODE(options[:address][:country])
           payment.LANGUAGECODE("en")
+        end
+      end
+      
+      def add_checkenrollment_payment(post, money, creditcard, options = {}) 
+        post.PAYMENT do |payment|
+          payment.ORDERID(options[:order_id])
+          payment.EXPIRYDATE(expiration(creditcard))
+          payment.CREDITCARDNUMBER(creditcard.number)
+          payment.CURRENCYCODE(options[:currency] || currency(money))
+          payment.AMOUNT(amount(money))
         end
       end
       

@@ -58,6 +58,18 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert response.test?
   end
   
+  def test_successful_authorize_with_fraud_code
+    @gateway.expects(:ssl_post).at_least(2).returns(successful_insert_order_with_payment_response_with_fraud_code, successful_do_checkenrollment_response)
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    
+    assert_instance_of Response, response
+    assert_success response
+    
+    # Replace with authorization number from the successful response
+    assert_equal '123', response.authorization
+    assert response.test?
+  end
+    
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_insert_order_with_payment_response)
     
@@ -175,6 +187,11 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal '0', response[:error_message]
   end
   
+  # a symbol can't start with a number. so we use secure_3d instead of 3d_secure
+  def test_should_build_correct_do_checkenrollment_request_if_secure_3d_if_true
+    request = @gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:secure_3d => true, :order_id => '9998990013', :address => {:country => 'NL'}})
+    assert_equal_xml successful_do_checkenrollment_request, request
+  end
   private
   
   def create_gateway(test = false, security = :ip_check)
@@ -323,6 +340,30 @@ class GlobalCollectTest < Test::Unit::TestCase
     XML
   end
   
+  def successful_do_checkenrollment_request
+    <<-XML
+    <XML>
+      <REQUEST>
+        <ACTION>DO_CHECKENROLLMENT</ACTION>
+        <META>
+          <MERCHANTID>1</MERCHANTID>
+          <IPADDRESS>123.123.123.123</IPADDRESS>
+          <VERSION>1.0</VERSION>
+        </META>
+        <PARAMS>
+          <PAYMENT>
+            <ORDERID>9998990013</ORDERID>            
+            <EXPIRYDATE>1206</EXPIRYDATE>
+            <CREDITCARDNUMBER>4567350000427977</CREDITCARDNUMBER>
+            <CURRENCYCODE>EUR</CURRENCYCODE>            
+            <AMOUNT>29990</AMOUNT>
+          </PAYMENT>
+        </PARAMS>
+      </REQUEST>
+    </XML>
+    XML
+  end
+  
   def successful_set_payment_request
     <<-XML
     <XML> 
@@ -453,6 +494,119 @@ class GlobalCollectTest < Test::Unit::TestCase
             <PAYMENTREFERENCE>185800005380</PAYMENTREFERENCE>
             <ADDITIONALREFERENCE>19998990013</ADDITIONALREFERENCE>
             <AUTHORISATIONCODE>123</AUTHORISATIONCODE>
+          </ROW>
+        </RESPONSE>
+      </REQUEST>
+    </XML>
+    XML
+  end
+  
+  def successful_insert_order_with_payment_response_with_fraud_code
+    <<-XML
+    <XML>
+      <REQUEST>
+        <ACTION>INSERT_ORDERWITHPAYMENT</ACTION>
+        <META>
+          <MERCHANTID>1</MERCHANTID>
+          <IPADDRESS>123.123.123.123</IPADDRESS>
+          <VERSION>1.0</VERSION>
+          <REQUESTIPADDRESS>123.123.123.123</REQUESTIPADDRESS>
+        </META>
+        <PARAMS>
+          <ORDER>
+            <ORDERID>9998990013</ORDERID>
+            <MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
+            <AMOUNT>29990</AMOUNT>
+            <CURRENCYCODE>EUR</CURRENCYCODE>
+            <COUNTRYCODE>NL</COUNTRYCODE>
+            <LANGUAGECODE>nl</LANGUAGECODE>
+          </ORDER>
+          <PAYMENT>
+            <PAYMENTPRODUCTID>1</PAYMENTPRODUCTID>
+            <AMOUNT>2345</AMOUNT>
+            <CURRENCYCODE>EUR</CURRENCYCODE>
+            <CREDITCARDNUMBER>4567350000427977</CREDITCARDNUMBER>
+            <EXPIRYDATE>1206</EXPIRYDATE>
+            <COUNTRYCODE>NL</COUNTRYCODE>
+            <LANGUAGECODE>nl</LANGUAGECODE>
+          </PAYMENT>
+        </PARAMS>
+        <RESPONSE>
+          <RESULT>OK</RESULT>
+          <META>
+            <RESPONSEDATETIME>20040718145902</RESPONSEDATETIME>
+            <REQUESTID>245</REQUESTID>
+          </META>
+          <ROW>
+            <MERCHANTID>1</MERCHANTID>
+            <ORDERID>9998990013</ORDERID>
+            <EFFORTID>1</EFFORTID>
+            <ATTEMPTID>1</ATTEMPTID>
+            <STATUSID>800</STATUSID>
+            <STATUSDATE>20030829171416</STATUSDATE>
+            <PAYMENTREFERENCE>185800005380</PAYMENTREFERENCE>
+            <ADDITIONALREFERENCE>19998990013</ADDITIONALREFERENCE>
+            <AUTHORISATIONCODE>123</AUTHORISATIONCODE>
+            <FRAUDRESULT>C</FRAUDRESULT>
+            <FRAUDCODE>0100</FRAUDCODE>     
+          </ROW>
+        </RESPONSE>
+      </REQUEST>
+    </XML>
+    XML
+  end  
+
+  def successful_do_checkenrollment_response
+    <<-XML
+    <XML>
+      <REQUEST>
+        <ACTION>INSERT_ORDERWITHPAYMENT</ACTION>
+        <META>
+          <MERCHANTID>1</MERCHANTID>
+          <IPADDRESS>123.123.123.123</IPADDRESS>
+          <VERSION>1.0</VERSION>
+          <REQUESTIPADDRESS>123.123.123.123</REQUESTIPADDRESS>
+        </META>
+        <PARAMS>
+          <ORDER>
+            <ORDERID>9998990013</ORDERID>
+            <MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
+            <AMOUNT>29990</AMOUNT>
+            <CURRENCYCODE>EUR</CURRENCYCODE>
+            <COUNTRYCODE>NL</COUNTRYCODE>
+            <LANGUAGECODE>nl</LANGUAGECODE>
+          </ORDER>
+          <PAYMENT>
+            <PAYMENTPRODUCTID>1</PAYMENTPRODUCTID>
+            <AMOUNT>2345</AMOUNT>
+            <CURRENCYCODE>EUR</CURRENCYCODE>
+            <CREDITCARDNUMBER>4567350000427977</CREDITCARDNUMBER>
+            <EXPIRYDATE>1206</EXPIRYDATE>
+            <COUNTRYCODE>NL</COUNTRYCODE>
+            <LANGUAGECODE>nl</LANGUAGECODE>
+          </PAYMENT>
+        </PARAMS>
+        <RESPONSE>
+          <RESULT>OK</RESULT>
+          <META>
+            <RESPONSEDATETIME>20040718145902</RESPONSEDATETIME>
+            <REQUESTID>245</REQUESTID>
+          </META>
+          <ROW>
+            <MERCHANTID>1</MERCHANTID>
+            <ORDERID>9998990013</ORDERID>
+            <EFFORTID>1</EFFORTID>
+            <ATTEMPTID>1</ATTEMPTID>
+            <STATUSID>800</STATUSID>
+            <STATUSDATE>20030829171416</STATUSDATE>
+            <PAYMENTREFERENCE>185800005380</PAYMENTREFERENCE>
+            <ADDITIONALREFERENCE>19998990013</ADDITIONALREFERENCE>
+            <AUTHORISATIONCODE>123</AUTHORISATIONCODE>
+            <ACSURL>http://acsurl.example.com</ACSURL>
+            <PAREQ></PAREQ>
+            <XID></XID>
+            <MD></MD>
+            <PROOFXML></PROOFXML>
           </ROW>
         </RESPONSE>
       </REQUEST>
