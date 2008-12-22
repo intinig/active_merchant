@@ -59,8 +59,9 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
   
   def test_successful_authorize_with_fraud_code
-    @gateway.expects(:ssl_post).at_least(2).returns(successful_insert_order_with_payment_response_with_fraud_code, successful_do_checkenrollment_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    gateway = GlobalCollectGateway.new( :merchant => '1', :ip => '123.123.123.123', :test => true, :secure_3d => true)
+    gateway.expects(:ssl_post).at_least(2).returns(successful_insert_order_with_payment_response_with_fraud_code, successful_do_checkenrollment_response)
+    assert response = gateway.authorize(@amount, @credit_card, @options)
     
     assert_instance_of Response, response
     assert_success response
@@ -189,14 +190,12 @@ class GlobalCollectTest < Test::Unit::TestCase
   
   # a symbol can't start with a number. so we use secure_3d instead of 3d_secure
   def test_should_build_correct_do_checkenrollment_request_if_secure_3d_if_true
-    request = @gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:secure_3d => true, :order_id => '9998990013', :address => {:country => 'NL'}})
+    # I use an other gateway because the secure_3d option is used just here
+    gateway = GlobalCollectGateway.new( :merchant => '1', :ip => '123.123.123.123', :test => true, :secure_3d => true)
+    request = gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
     assert_equal_xml successful_do_checkenrollment_request, request
   end
   
-  def test_should_not_build_correct_do_checkenrollment_request_if_secure_3d_is_not_true
-    request = @gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
-    assert_equal_xml successful_authorize_request, request
-  end
   private
   
   def create_gateway(test = false, security = :ip_check)

@@ -25,7 +25,7 @@ module ActiveMerchant #:nodoc:
 
       # Default currency
       self.default_currency = "EUR"
-      
+
       # You can also pass in a :security option that can be :ip_check or :client_auth
       # it is used to check for the correct url to use
       def initialize(options = {})
@@ -39,7 +39,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :order_id)
                 
         response = commit(build_authorize_request(money, creditcard, options))
-        if response.success? && response.fraud_review?[:fraud_result] == 'C'
+        if @options[:secure_3d] && response.success? && response.fraud_review?[:fraud_result] == 'C'
           response = commit(build_do_checkenrollment_request(money, creditcard, options))
         end
         response
