@@ -32,7 +32,7 @@ module ActiveMerchant #:nodoc:
         requires!(options, :merchant, :ip)
         @options = {:security => :ip_check}.merge(options)
         super
-      end  
+      end
       
       # INSERT_ORDERWITHPAYMENT
       def authorize(money, creditcard, options = {})

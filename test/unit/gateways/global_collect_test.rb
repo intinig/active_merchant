@@ -68,7 +68,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   
   def test_successful_authorize_with_fraud_code
     gateway = GlobalCollectGateway.new( :merchant => '1', :ip => '123.123.123.123', :test => true, :secure_3d => true)
-    gateway.expects(:ssl_post).at_least(2).returns(successful_insert_order_with_payment_response_with_fraud_code, successful_do_checkenrollment_response)
+    gateway.expects(:ssl_post).at_least(2).returns(successful_insert_order_with_payment_and_fraud_code_response, successful_do_checkenrollment_response)
     assert response = gateway.authorize(@amount, @credit_card, @options)
     
     assert_instance_of Response, response
@@ -517,7 +517,7 @@ class GlobalCollectTest < Test::Unit::TestCase
     XML
   end
   
-  def successful_insert_order_with_payment_response_with_fraud_code
+  def successful_insert_order_with_payment_and_fraud_code_response
     <<-XML
     <XML>
       <REQUEST>
