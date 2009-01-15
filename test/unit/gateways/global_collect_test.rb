@@ -66,14 +66,19 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert_equal_xml successful_do_checkenrollment_request, request
   end
   
-  def test_should_parse_acs_url_with_do_checkenrollment
+  def test_should_parse_acs_url_on_do_checkenrollment_response
     success, message, options = @gateway.send(:parse, successful_do_checkenrollment_response)
     assert_not_nil options[:acs_url]
   end
   
-  def test_should_parse_pareq_with_do_checkenrollment
+  def test_should_parse_pareq_on_do_checkenrollment_response
     success, message, options = @gateway.send(:parse, successful_do_checkenrollment_response)
     assert_not_nil options[:pareq]
+  end
+  
+  def test_should_parse_md_on_do_checkenrollment_response
+    success, message, options = @gateway.send(:parse, successful_do_checkenrollment_response)
+    assert_not_nil options[:md]
   end    
     
   def test_failed_authorize
