@@ -38,15 +38,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_authorize_should_build_successful_request
     request = @gateway.send(:build_authorize_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
     assert_equal_xml successful_authorize_request, request
-  end
-  
-  # a symbol can't start with a number. so we use secure_3d instead of 3d_secure
-  def test_authorize_should_build_correct_do_checkenrollment_request_if_secure_3d_if_true
-    # I use an other gateway because the secure_3d option is used just here
-    gateway = GlobalCollectGateway.new( :merchant => '1', :ip => '123.123.123.123', :test => true, :secure_3d => true)
-    request = gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
-    assert_equal_xml successful_do_checkenrollment_request, request
-  end
+  end    
   
   # explorative test
   def test_decoding_responses
@@ -66,17 +58,18 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert response.test?
   end
   
-  def test_authorize_should_not_call_do_checkenrollment_if_secure_3d_is_false
-    @gateway.expects(:ssl_post).returns(successful_insert_order_with_payment_response)
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    
-    assert_instance_of Response, response
-    assert_success response
-    
-    # Replace with authorization number from the successful response
-    assert_equal '123', response.authorization
-    assert response.test?
+  # a symbol can't start with a number. so we use secure_3d instead of 3d_secure
+  def test_authorize_should_build_correct_do_checkenrollment_request_if_secure_3d_if_true
+    # I use an other gateway because the secure_3d option is used just here
+    gateway = GlobalCollectGateway.new( :merchant => '1', :ip => '123.123.123.123', :test => true, :secure_3d => true)
+    request = gateway.send(:build_do_checkenrollment_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
+    assert_equal_xml successful_do_checkenrollment_request, request
   end
+  
+  def test_should_parse_acs_url_with_do_checkenrollment
+    success, message, options = @gateway.send(:parse, successful_do_checkenrollment_response)
+    assert_not_nil options[:acs_url]
+  end    
     
   def test_failed_authorize
     @gateway.expects(:ssl_post).returns(failed_insert_order_with_payment_response)
@@ -512,57 +505,51 @@ class GlobalCollectTest < Test::Unit::TestCase
     <<-XML
     <XML>
       <REQUEST>
-        <ACTION>INSERT_ORDERWITHPAYMENT</ACTION>
+        <ACTION>DO_CHECKENROLLMENT</ACTION>
         <META>
-          <MERCHANTID>1</MERCHANTID>
+          <MERCHANTID>4389</MERCHANTID>
           <IPADDRESS>123.123.123.123</IPADDRESS>
           <VERSION>1.0</VERSION>
-          <REQUESTIPADDRESS>123.123.123.123</REQUESTIPADDRESS>
+          <REQUESTIPADDRESS>192.168.41.12</REQUESTIPADDRESS>
         </META>
         <PARAMS>
-          <ORDER>
-            <ORDERID>9998990013</ORDERID>
-            <MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
-            <AMOUNT>29990</AMOUNT>
-            <CURRENCYCODE>EUR</CURRENCYCODE>
-            <COUNTRYCODE>NL</COUNTRYCODE>
-            <LANGUAGECODE>nl</LANGUAGECODE>
-          </ORDER>
           <PAYMENT>
-            <PAYMENTPRODUCTID>1</PAYMENTPRODUCTID>
-            <AMOUNT>2345</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
-            <CREDITCARDNUMBER>4567350000427977</CREDITCARDNUMBER>
-            <EXPIRYDATE>1206</EXPIRYDATE>
-            <COUNTRYCODE>NL</COUNTRYCODE>
-            <LANGUAGECODE>nl</LANGUAGECODE>
+            <COUNTRYCODE>CA</COUNTRYCODE>
+            <ORDERID>1232029274</ORDERID>
+            <PAYMENTPRODUCTID>1</PAYMENTPRODUCTID>
+            <EXPIRYDATE>0910</EXPIRYDATE>
+            <CREDITCARDNUMBER>4012001011000771</CREDITCARDNUMBER>
+            <CURRENCYCODE>EUR</CURRENCYCODE>
+            <AMOUNT>100</AMOUNT>
+            <AUTHENTICATIONINDICATOR>1</AUTHENTICATIONINDICATOR>
           </PAYMENT>
         </PARAMS>
         <RESPONSE>
           <RESULT>OK</RESULT>
           <META>
-            <RESPONSEDATETIME>20040718145902</RESPONSEDATETIME>
-            <REQUESTID>245</REQUESTID>
+            <REQUESTID>253185</REQUESTID>
+            <RESPONSEDATETIME>20090115152119</RESPONSEDATETIME>
           </META>
           <ROW>
-            <MERCHANTID>1</MERCHANTID>
-            <ORDERID>9998990013</ORDERID>
             <EFFORTID>1</EFFORTID>
+            <PAYMENTREFERENCE>0</PAYMENTREFERENCE>
+            <ACSURL>https://dropit.3dsecure.net:9443/PIT/ACS</ACSURL>
+            <STATUSDATE>20090115152119</STATUSDATE>
+            <STATUSID>50</STATUSID>
+            <ADDITIONALREFERENCE>00000043891232029274</ADDITIONALREFERENCE>
+            <EXTERNALREFERENCE>000000438912320292740000100001</EXTERNALREFERENCE>
             <ATTEMPTID>1</ATTEMPTID>
-            <STATUSID>800</STATUSID>
-            <STATUSDATE>20030829171416</STATUSDATE>
-            <PAYMENTREFERENCE>185800005380</PAYMENTREFERENCE>
-            <ADDITIONALREFERENCE>19998990013</ADDITIONALREFERENCE>
-            <AUTHORISATIONCODE>123</AUTHORISATIONCODE>
-            <ACSURL>http://acsurl.example.com</ACSURL>
-            <PAREQ></PAREQ>
-            <XID></XID>
-            <MD></MD>
-            <PROOFXML></PROOFXML>
+            <ORDERID>1232029274</ORDERID>
+            <PAREQ>eJxVUe1ygjAQfBXHByABRcQ5MoPVUTtqae1M+8/JhGullQABCr59E8R+5Nft3WVvbw+eTwpxcUBRK2Sww7Lk7zhI4mDYvqXucXSkluM5Hh0yiMInLBh8oSqTTDLb0iUgN6j/KnHismLARTHf7NnYtyeeB6SHkKLaLJhHR3TiU4deH5BrGiRPkUWKx3xwyDmQDoPIalmpC3OdKZAbgFqd2amq8hkhTdNYn+fUElkKxOSB/AqJahOVmqdNYtbW8WL6sIuWsXOPhVzR3eN2H4brebMMgJgOiHmFTEvzqW27A3s8c+yZ7QPp8sBTI8AsrmX3AHIzI+wrpvA3AdpWhVJcmO+ZBW4IsM0zibpDO/gTA/kVfLc2PopKW6PW2euH47mZG67ktnmpRJG0YRAYZ7sGw5ZoX/R4v6MzAIihIP3RSH9ZHf27+DdX8Kgy</PAREQ>
+            <PROOFXML>&lt;AuthProof&gt;&lt;Time&gt;2009 Jan 15 06:21:19&lt;/Time&gt;&lt;DSUrl&gt;https:198.241.171.150:9443/PIT/DS&lt;/DSUrl&gt;&lt;VEReqProof&gt;&lt;Message id="xfm5_3_0.27268"&gt;&lt;VEReq&gt;&lt;version&gt;1.0.2&lt;/version&gt;&lt;pan&gt;XXXXXXXXXXXX0771&lt;/pan&gt;&lt;Merchant&gt;&lt;acqBIN&gt;491677&lt;/acqBIN&gt;&lt;merID&gt;703069020000000&lt;/merID&gt;&lt;password&gt;scybin26&lt;/password&gt;&lt;/Merchant&gt;&lt;Browser&gt;&lt;accept&gt;null&lt;/accept&gt;&lt;userAgent&gt;null&lt;/userAgent&gt;&lt;/Browser&gt;&lt;/VEReq&gt;&lt;/Message&gt;&lt;/VEReqProof&gt;&lt;VEResProof&gt;&lt;Message id="xfm5_3_0.27268"&gt;&lt;VERes&gt;&lt;version&gt;1.0.2&lt;/version&gt;&lt;CH&gt;&lt;enrolled&gt;Y&lt;/enrolled&gt;&lt;acctID&gt;rHoXj275o5AGnLwWtcqixA==&lt;/acctID&gt;&lt;/CH&gt;&lt;url&gt;https://dropit.3dsecure.net:9443/PIT/ACS&lt;/url&gt;&lt;protocol&gt;ThreeDSecure&lt;/protocol&gt;&lt;/VERes&gt;&lt;/Message&gt;&lt;/VEResProof&gt;&lt;/AuthProof&gt;</PROOFXML>
+            <MD>000000438912320292740000100001</MD>
+            <MERCHANTID>4389</MERCHANTID>
+            <XID>xudD8OMPEd2JeqnG0MQLNAAHBwE=</XID>
           </ROW>
         </RESPONSE>
       </REQUEST>
-    </XML>
+    </XML>    
     XML
   end
   
