@@ -37,10 +37,11 @@ module ActiveMerchant #:nodoc:
       # INSERT_ORDERWITHPAYMENT
       def authorize(money, creditcard, options = {})
         requires!(options, :order_id)
-                
-        response = commit(build_authorize_request(money, creditcard, options))
-        if @options[:secure_3d] && response.success? && response.fraud_review?[:fraud_result] == 'C'
-          response = commit(build_do_checkenrollment_request(money, creditcard, options))
+
+        response = if @options[:secure_3d]
+          commit(build_do_checkenrollment_request(money, creditcard, options))
+        else
+          commit(build_authorize_request(money, creditcard, options))
         end
         response
       end
