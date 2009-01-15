@@ -246,11 +246,14 @@ module ActiveMerchant #:nodoc:
       
       def add_checkenrollment_payment(post, money, creditcard, options = {}) 
         post.PAYMENT do |payment|
+          payment.CURRENCYCODE(options[:currency] || currency(money))
+          payment.COUNTRYCODE(options[:address][:country])
           payment.ORDERID(options[:order_id])
           payment.EXPIRYDATE(expiration(creditcard))
           payment.CREDITCARDNUMBER(creditcard.number)
           payment.CURRENCYCODE(options[:currency] || currency(money))
           payment.AMOUNT(amount(money))
+          payment.AUTHENTICATIONINDICATOR(1)
         end
       end
       
