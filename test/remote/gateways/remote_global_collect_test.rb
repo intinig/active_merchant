@@ -39,8 +39,8 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     assert_success response
     assert response = @gateway.capture(@amount, nil, @options)
     assert_success response
-    assert response = @gateway.credit(@amount, @options[:order_id])
-    assert_success response
+    # assert response = @gateway.credit(@amount, @options[:order_id])
+    # assert_success response
   end
   
   def test_invalid_login
