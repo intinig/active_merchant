@@ -284,7 +284,8 @@ module ActiveMerchant #:nodoc:
         }
         avs_result = get_key_from_response(response, "ROW/AVSRESULT")
         cvv_result = get_key_from_response(response, "ROW/CVVRESULT")
-        [success, message, {:authorization => authorization, :fraud_review => fraud_review, :avs_result => avs_result, :cvv_result => cvv_result, :request_id => request_id}]
+        acs_url    = get_key_from_response(response, "ROW/ACSURL")
+        [success, message, {:authorization => authorization, :fraud_review => fraud_review, :avs_result => avs_result, :cvv_result => cvv_result, :request_id => request_id, :acs_url => acs_url}]
       end     
       
       def parse_order(body)
