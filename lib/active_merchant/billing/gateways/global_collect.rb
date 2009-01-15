@@ -249,6 +249,7 @@ module ActiveMerchant #:nodoc:
           payment.CURRENCYCODE(options[:currency] || currency(money))
           payment.COUNTRYCODE(options[:address][:country])
           payment.ORDERID(options[:order_id])
+          payment.PAYMENTPRODUCTID(credit_card_type(creditcard))
           payment.EXPIRYDATE(expiration(creditcard))
           payment.CREDITCARDNUMBER(creditcard.number)
           payment.CURRENCYCODE(options[:currency] || currency(money))
