@@ -82,8 +82,15 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert response.test?
   end
   
+  
   def test_successful_authenticate
+    @gateway.expects(:ssl_post).returns(successful_do_validate_response)
     
+    assert response = @gateway.authenticate(1, 1, '123432kjvdhasiyfdiasyi23u4h2452g', @options)
+    assert_instance_of Response, response
+    assert_success response
+    
+    assert response.test?
   end
   
   def test_should_parse_acs_url_on_insert_order_with_payment_response_using_secure_3d
@@ -269,7 +276,7 @@ class GlobalCollectTest < Test::Unit::TestCase
           <ORDERID>9998890004</ORDERID> 
           <EFFORTID>1</EFFORTID> 
           <ATTEMPTID>1</ATTEMPTID> 
-          <SIGNEDPARES>123432kjvdhasiyfdiasyi23u4h2452g</SIGNEDPARES> 
+          <SIGNEDPARES>123432kjvdhasiyfdiasyi23u4h2452g</SIGNEDPARES>
           <AUTHENTICATIONINDICATOR>1</AUTHENTICATIONINDICATOR>
          </PAYMENT> 
         </PARAMS> 
@@ -280,45 +287,45 @@ class GlobalCollectTest < Test::Unit::TestCase
   
   def successful_get_order_status_response
     <<-XML
-    <XML> 
-     <REQUEST> 
-      <ACTION>GET_ORDERSTATUS</ACTION> 
-      <META> 
-       <MERCHANTID>1</MERCHANTID> 
-       <IPADDRESS>123.123.123.123</IPADDRESS> 
-       <VERSION>1.0</VERSION> 
-       <REQUESTIPADDRESS>123.123.123.123</REQUESTIPADDRESS> 
-      </META> 
-      <PARAMS> 
-       <ORDER> 
-        <ORDERID>9998890004</ORDERID> 
-       </ORDER> 
-      </PARAMS> 
-      <RESPONSE> 
-       <RESULT>OK</RESULT> 
-       <META> 
-        <RESPONSEDATETIME>20040718145902</RESPONSEDATETIME> 
-        <REQUESTID>245</REQUESTID> 
-       </META> 
-       <ROW> 
-         <MERCHANTID>1</MERCHANTID> 
-        <ORDERID>9998890004</ORDERID> 
-        <EFFORTID>1</EFFORTID> 
-        <ATTEMPTID>1</ATTEMPTID> 
-        <PAYMENTREFERENCE>900100000010</PAYMENTREFERENCE> 
-        <MERCHANTREFERENCE>123</MERCHANTREFERENCE> 
-        <STATUSID>99999</STATUSID> 
-        <PAYMENTMETHODID>1</PAYMENTMETHODID>
-        <PAYMENTPRODUCTID>0</PAYMENTPRODUCTID> 
-        <CURRENCYCODE>EUR</CURRENCYCODE> 
-        <AMOUNT>2345</AMOUNT> 
-        <STATUSDATE>20030828183053</STATUSDATE> 
-        <ERRORNUMBER>0</ERRORNUMBER> 
-        <ERRORMESSAGE>0</ERRORMESSAGE> 
-       </ROW> 
-      </RESPONSE> 
-     </REQUEST> 
-    </XML> 
+      <XML> 
+        <REQUEST> 
+          <ACTION>GET_ORDERSTATUS</ACTION> 
+          <META> 
+            <MERCHANTID>1</MERCHANTID> 
+            <IPADDRESS>123.123.123.123</IPADDRESS> 
+            <VERSION>1.0</VERSION> 
+            <REQUESTIPADDRESS>123.123.123.123</REQUESTIPADDRESS> 
+          </META> 
+          <PARAMS> 
+            <ORDER> 
+              <ORDERID>9998890004</ORDERID> 
+            </ORDER> 
+          </PARAMS> 
+          <RESPONSE> 
+            <RESULT>OK</RESULT> 
+            <META> 
+              <RESPONSEDATETIME>20040718145902</RESPONSEDATETIME> 
+              <REQUESTID>245</REQUESTID> 
+            </META> 
+            <ROW> 
+              <MERCHANTID>1</MERCHANTID> 
+              <ORDERID>9998890004</ORDERID> 
+              <EFFORTID>1</EFFORTID> 
+              <ATTEMPTID>1</ATTEMPTID> 
+              <PAYMENTREFERENCE>900100000010</PAYMENTREFERENCE> 
+              <MERCHANTREFERENCE>123</MERCHANTREFERENCE> 
+              <STATUSID>99999</STATUSID> 
+              <PAYMENTMETHODID>1</PAYMENTMETHODID>
+              <PAYMENTPRODUCTID>0</PAYMENTPRODUCTID> 
+              <CURRENCYCODE>EUR</CURRENCYCODE> 
+              <AMOUNT>2345</AMOUNT> 
+              <STATUSDATE>20030828183053</STATUSDATE> 
+              <ERRORNUMBER>0</ERRORNUMBER> 
+              <ERRORMESSAGE>0</ERRORMESSAGE> 
+            </ROW> 
+          </RESPONSE> 
+        </REQUEST> 
+      </XML> 
     XML
   end
  
@@ -627,6 +634,55 @@ class GlobalCollectTest < Test::Unit::TestCase
         </RESPONSE>
       </REQUEST>
     </XML>    
+    XML
+  end
+  
+  def successful_do_validate_response
+    <<-XML
+      <XML> 
+       <REQUEST> 
+        <ACTION>DO_VALIDATE</ACTION>
+        <META> 
+          <MERCHANTID>1</MERCHANTID> 
+          <IPADDRESS>20.60.98.38</IPADDRESS> 
+          <REQUESTIPADDRESS>192.168.203.200:80</REQUESTIPADDRESS>  
+          <VERSION>1.0</VERSION> 
+        </META>
+        <PARAMS> 
+          <PAYMENT> 
+            <ORDERID>333460</ORDERID> 
+            <EFFORTID>1</EFFORTID> 
+            <ATTEMPTID>1</ATTEMPTID> 
+            <SIGNEDPARES>123432kjvdhasiyfdiasyi23u4h2452g</SIGNEDPARES> 
+            <AUTHENTICATIONINDICATOR>1</AUTHENTICATIONINDICATOR> 
+          </PAYMENT> 
+        </PARAMS>
+        <RESPONSE> 
+          <RESULT>OK</RESULT>  
+            <META> 
+              <REQUESTID>1</REQUESTID>  
+              <RESPONSEDATETIME>20040629092555</RESPONSEDATETIME>  
+            </META> 
+            <ROW> 
+              <MERCHANTID>1</MERCHANTID> 
+              <ORDERID>159152479</ORDERID>  
+              <EFFORTID>1</EFFORTID>  
+              <ATTEMPTID>1</ATTEMPTID>  
+              <STATUSID>800</STATUSID>  
+              <STATUSDATE>200406290926555</STATUSDATE>  
+              <PAYMENTREFERENCE>0</PAYMENTREFERENCE>  
+              <FRAUDRESULT>N</FRAUDRESULT>  
+              <FRAUDCODE>0000</FRAUDCODE> 
+              <ADDITIONALREFERENCE>00000000010159152479</ADDITIONALREFERENCE>  
+              <STATUSDATE>20040629092555</STATUSDATE>  
+              <EXTERNALREFERENCE>000000000101591524790000100001</EXTERNALREFERENCE>  
+              <AVSRESULT>0</AVSRESULT>  
+              <ECI>5</ECI> 
+              <CAVV>33240a04aa06dfsafdfas29092fsdaf555</CAVV> 
+            </ROW> 
+          </RESPONSE>
+        </REQUEST>
+      </XML>
     XML
   end
   

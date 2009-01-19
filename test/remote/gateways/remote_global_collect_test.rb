@@ -43,11 +43,16 @@ class RemoteGlobalCollectTest < Test::Unit::TestCase
     # assert_success response
   end
   
-  def test_check_enrollment
+  def test_authorize_using_secure_3d
     gateway = GlobalCollectGateway.new(fixtures(:global_collect).merge!(:secure_3d => true))
     assert response = gateway.authorize(@amount, @credit_card, @options)    
     assert_success response
-  end
+    assert response.params['acs_url']
+    assert response.params['pareq']
+    assert response.params['md']
+    assert response.params['attempt_id']
+    assert response.params['effort_id']
+  end    
   
   def test_invalid_login
     gateway = GlobalCollectGateway.new(

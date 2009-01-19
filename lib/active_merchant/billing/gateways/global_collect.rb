@@ -41,7 +41,9 @@ module ActiveMerchant #:nodoc:
       end
       
       # DO_VALIDATE
-      def authenticate        
+      def authenticate(effort_id, attempt_id, signedpares, options = {})
+        requires!(options, :order_id)
+        response = commit(build_do_validate_request(options[:order_id], effort_id, attempt_id, signedpares))
       end
       
       # authorize, capture
@@ -172,8 +174,9 @@ module ActiveMerchant #:nodoc:
       end
             
       def commit(request)
-        success, message, options = parse(ssl_post(global_collect_url, request))
-        Response.new(success, message, {:request_id => options.delete(:request_id)}, options.merge(:test => test?))
+        success, message, options = parse(ssl_post(global_collect_url, request))        
+        #Response.new(success, message, {:request_id => options.delete(:request_id)}, options.merge(:test => test?))
+        Response.new(success, message, options, options.merge(:test => test?))
       end
       
       def build_request(request = '', &block)
