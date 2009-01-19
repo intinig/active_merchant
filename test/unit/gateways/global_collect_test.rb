@@ -104,6 +104,11 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_should_parse_attempt_id_on_insert_order_with_payment_response_using_secure_3d
     success, message, options = @gateway.send(:parse, successful_insert_order_with_payment_response_with_secure_3d)
     assert_not_nil options[:attempt_id]
+  end
+  
+  def test_should_parse_effort_id_on_insert_order_with_payment_response_using_secure_3d
+    success, message, options = @gateway.send(:parse, successful_insert_order_with_payment_response_with_secure_3d)
+    assert_not_nil options[:effort_id]
   end    
     
   def test_failed_authorize
