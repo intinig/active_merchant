@@ -46,6 +46,10 @@ module ActiveMerchant #:nodoc:
         response
       end
       
+      # DO_VALIDATE
+      def authenticate        
+      end
+      
       # authorize, capture
       # some code duplication this way we avoid doing a double request since 
       # we already have a credit card.
@@ -109,6 +113,14 @@ module ActiveMerchant #:nodoc:
           request.ACTION("INSERT_ORDERWITHPAYMENT")
           add_meta(request)
           add_authorize_params(request, money, creditcard, options)
+        end
+      end
+      
+      def build_do_validate_request(order_id, effort_id, attempt_id, pares)
+        build_request do |request|
+          request.ACTION("DO_VALIDATE")
+          add_meta(request)
+          add_do_validate_params(request, order_id, effort_id, attempt_id, pares)
         end
       end
 
@@ -213,6 +225,18 @@ module ActiveMerchant #:nodoc:
             payment.ORDERID(order_id)
             payment.EFFORTID('1')
             payment.PAYMENTPRODUCTID(payment_product_id)
+          end
+        end
+      end
+      
+      def add_do_validate_params(post, order_id, effort_id, attempt_id, pares)
+        post.PARAMS do
+          post.PAYMENT do |payment|
+            payment.ORDERID(order_id)
+            payment.EFFORTID(effort_id)
+            payment.ATTEMPTID(attempt_id)
+            payment.SIGNEDPARES(pares)
+            payment.AUTHENTICATIONINDICATOR(1)
           end
         end
       end

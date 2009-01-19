@@ -18,7 +18,7 @@ class GlobalCollectTest < Test::Unit::TestCase
         :country => 'IT'
       }
     }
-        
+
   end
   
   def test_test?
@@ -38,6 +38,11 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_authorize_should_build_successful_request
     request = @gateway.send(:build_authorize_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
     assert_equal_xml successful_authorize_request, request
+  end
+  
+  def test_should_build_correct_do_validate_request
+    request = @gateway.send(:build_do_validate_request, 9998890004, 1, 1, '123432kjvdhasiyfdiasyi23u4h2452g')
+    assert_equal_xml successful_do_validate_request, request
   end    
   
   # explorative test
@@ -221,6 +226,30 @@ class GlobalCollectTest < Test::Unit::TestCase
       </PARAMS> 
      </REQUEST> 
     </XML> 
+    XML
+  end
+  
+  def successful_do_validate_request
+    <<-XML
+      <XML> 
+       <REQUEST> 
+        <ACTION>DO_VALIDATE</ACTION> 
+        <META> 
+         <MERCHANTID>1</MERCHANTID> 
+         <IPADDRESS>123.123.123.123</IPADDRESS> 
+         <VERSION>1.0</VERSION> 
+        </META> 
+        <PARAMS> 
+         <PAYMENT> 
+          <ORDERID>9998890004</ORDERID> 
+          <EFFORTID>1</EFFORTID> 
+          <ATTEMPTID>1</ATTEMPTID> 
+          <SIGNEDPARES>123432kjvdhasiyfdiasyi23u4h2452g</SIGNEDPARES> 
+          <AUTHENTICATIONINDICATOR>1</AUTHENTICATIONINDICATOR>
+         </PAYMENT> 
+        </PARAMS> 
+       </REQUEST> 
+      </XML>
     XML
   end
   
