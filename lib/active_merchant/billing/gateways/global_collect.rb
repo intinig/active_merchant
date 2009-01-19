@@ -36,14 +36,8 @@ module ActiveMerchant #:nodoc:
       
       # INSERT_ORDERWITHPAYMENT
       def authorize(money, creditcard, options = {})
-        requires!(options, :order_id)
-
-        response = if @options[:secure_3d]
-          commit(build_do_checkenrollment_request(money, creditcard, options))
-        else
-          commit(build_authorize_request(money, creditcard, options))
-        end
-        response
+        requires!(options, :order_id)        
+        response = commit(build_authorize_request(money, creditcard, options))        
       end
       
       # DO_VALIDATE
@@ -157,15 +151,7 @@ module ActiveMerchant #:nodoc:
             end
           end
         end
-      end
-      
-      def build_do_checkenrollment_request(money, creditcard, options = {})
-        build_request do |request|
-          request.ACTION("DO_CHECKENROLLMENT")
-          add_meta(request)
-          add_checkenrollment_params(request, money, creditcard, options)
-        end                        
-      end
+      end            
       
       def build_get_order_status_request(order_id)
         build_request do |request|
@@ -212,13 +198,7 @@ module ActiveMerchant #:nodoc:
           add_authorize_payment(post, money, creditcard, options)
         end
       end
-      
-      def add_checkenrollment_params(post, money, creditcard, options = {})
-        post.PARAMS do
-          add_checkenrollment_payment(post, money, creditcard, options)
-        end
-      end
-      
+            
       def add_capture_params(post, order_id, payment_product_id)
         post.PARAMS do
           post.PAYMENT do |payment|
@@ -265,23 +245,10 @@ module ActiveMerchant #:nodoc:
           payment.EXPIRYDATE(expiration(creditcard))
           payment.COUNTRYCODE(options[:address][:country])
           payment.LANGUAGECODE("en")
+          payment.AUTHENTICATIONINDICATOR(1) if @options[:secure_3d]
         end
       end
-      
-      def add_checkenrollment_payment(post, money, creditcard, options = {}) 
-        post.PAYMENT do |payment|
-          payment.CURRENCYCODE(options[:currency] || currency(money))
-          payment.COUNTRYCODE(options[:address][:country])
-          payment.ORDERID(options[:order_id])
-          payment.PAYMENTPRODUCTID(credit_card_type(creditcard))
-          payment.EXPIRYDATE(expiration(creditcard))
-          payment.CREDITCARDNUMBER(creditcard.number)
-          payment.CURRENCYCODE(options[:currency] || currency(money))
-          payment.AMOUNT(amount(money))
-          payment.AUTHENTICATIONINDICATOR(1)
-        end
-      end
-      
+            
       def add_capture_payment(post, money, creditcard, options = {}) 
       end
 
@@ -294,7 +261,7 @@ module ActiveMerchant #:nodoc:
       def add_invoice(post, options)
       end
                                        
-      def parse(body)
+      def parse(body)      
         r = REXML::Document.new(body)
         response = r.root.elements
         success = get_key_from_response(response, "RESULT") == "OK"
@@ -311,7 +278,8 @@ module ActiveMerchant #:nodoc:
         acs_url    = get_key_from_response(response, "ROW/ACSURL")
         pareq      = get_key_from_response(response, "ROW/PAREQ")
         md         = get_key_from_response(response, "ROW/MD")
-        [success, message, {:authorization => authorization, :fraud_review => fraud_review, :avs_result => avs_result, :cvv_result => cvv_result, :request_id => request_id, :acs_url => acs_url, :pareq => pareq, :md => md}]
+        attempt_id = get_key_from_response(response, "ROW/ATTEMPTID")
+        [success, message, {:authorization => authorization, :fraud_review => fraud_review, :avs_result => avs_result, :cvv_result => cvv_result, :request_id => request_id, :acs_url => acs_url, :pareq => pareq, :md => md, :attempt_id => attempt_id}]
       end     
       
       def parse_order(body)
