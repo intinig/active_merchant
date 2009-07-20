@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/../../test_helper'
+require 'test_helper'
 
 class SkipJackTest < Test::Unit::TestCase
 
@@ -61,6 +61,14 @@ class SkipJackTest < Test::Unit::TestCase
     assert response = @gateway.purchase(@amount, @credit_card, @options)
     assert_success response
     assert_equal "9802853155172.022", response.authorization
+  end
+  
+  def test_purchase_failure
+    @gateway.expects(:ssl_post).returns(unsuccessful_authorization_response)
+
+    assert response = @gateway.purchase(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_failure response
   end
 
   def test_split_line

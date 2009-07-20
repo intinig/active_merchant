@@ -1,6 +1,6 @@
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
-    # ==== Custotmer Information Manager (CIM)
+    # ==== Customer Information Manager (CIM)
     # 
     # The Authorize.Net Customer Information Manager (CIM) is an optional additional service that allows you to store sensitive payment information on
     # Authorize.Net's servers, simplifying payments for returning customers and recurring transactions. It can also help with Payment Card Industry (PCI) 
@@ -73,6 +73,11 @@ module ActiveMerchant #:nodoc:
         :ccd => 'CCD',
         :ppd => 'PPD'
       }
+      
+      self.homepage_url = 'http://www.authorize.net/'
+      self.display_name = 'Authorize.Net CIM'
+      self.supported_countries = ['US']
+      self.supported_cardtypes = [:visa, :master, :american_express, :discover]
     
       # Creates a new AuthorizeNetCimGateway
       #
@@ -578,6 +583,7 @@ module ActiveMerchant #:nodoc:
           xml.tag!('cardNumber', credit_card.number)
           # The expiration date of the credit card used for the subscription
           xml.tag!('expirationDate', expdate(credit_card))
+          xml.tag!('cardCode', credit_card.verification_value) if credit_card.verification_value?
         end
       end
       
