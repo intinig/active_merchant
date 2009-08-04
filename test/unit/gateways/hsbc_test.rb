@@ -60,18 +60,34 @@ class HsbcTest < Test::Unit::TestCase
     end    
   end
   
-  # def test_successful_authorize
-  #   @gateway.expects(:ssl_post).returns(successful_authorize_response)
-  #   
-  #   assert response = @gateway.authorize(@amount, @credit_card, @options)
-  #   assert_instance_of Response, response
-  #   assert_success response
-  #   
-  #   # Replace with authorization number from the successful response
-  #   assert_equal '123', response.authorization
-  #   assert response.test?
-  # end
+  def test_get_key_from_response_should_fetch_key
+    r = REXML::Document.new(successful_authorize_response).root.elements
+    key = @gateway.send(:get_key_from_response, r, "EngineDocList.EngineDoc.OrderFormDoc.Transaction.CardProcResp.ProcReturnMsg")
+    assert_equal "Approved", key, r.inspect
+  end
   
+  def test_get_message_from_response_should_return_one_message
+    r = REXML::Document.new(insufficient_permission_response).root.elements
+    message = @gateway.send(:get_message_from_response, r)
+    assert_equal "Insufficient permissions to perform requested operation.", message
+  end
+
+  def test_get_message_from_response_should_return_multiple_messages
+    r = REXML::Document.new(forged_multi_message_response).root.elements
+    message = @gateway.send(:get_message_from_response, r)
+    assert_equal "Insufficient permissions to perform requested operation., Insufficient permissions to perform requested operation.", message
+  end
+  
+  def test_successful_authorize
+    @gateway.expects(:ssl_post).returns(successful_authorize_response)
+    
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert_instance_of Response, response
+    assert_success response
+    
+    assert response.test?
+  end
+    
   # def test_failed_authorize
   #   @gateway.expects(:ssl_post).returns(failed_insert_order_with_payment_response)
   #   
@@ -131,9 +147,272 @@ class HsbcTest < Test::Unit::TestCase
   
   def successful_authorize_response
   <<-XMLEOF
+  <?xml version="1.0" encoding="UTF-8"?>
+  <EngineDocList>
+   <DocVersion DataType="String">1.0</DocVersion>
+   <EngineDoc>
+    <ContentType DataType="String">OrderFormDoc</ContentType>
+    <DocumentId DataType="String">4a12be4b-c307-3002-002b-0003ba1d84d5</DocumentId>
+    <Instructions>
+     <Pipeline DataType="String">Payment</Pipeline>
+
+    </Instructions>
+    <MessageList>
+
+    </MessageList>
+    <OrderFormDoc>
+     <Consumer>
+      <PaymentMech>
+       <CreditCard>
+        <Expires DataType="ExpirationDate">05/07</Expires>
+        <Number DataType="String">4111111111111111</Number>
+
+       </CreditCard>
+       <Type DataType="String">CreditCard</Type>
+
+      </PaymentMech>
+
+     </Consumer>
+     <DateTime DataType="DateTime">1248267525896</DateTime>
+     <FraudInfo>
+      <FraudResult DataType="String">None</FraudResult>
+      <FraudResultCode DataType="S32">0</FraudResultCode>
+      <OrderScore DataType="Numeric" Precision="0">0</OrderScore>
+      <StrategyList>
+       <Strategy>
+        <FraudAction DataType="String">None</FraudAction>
+        <StrategyId DataType="S32">1</StrategyId>
+        <StrategyName DataType="String">My Rules</StrategyName>
+        <StrategyOwnerId DataType="S32">359</StrategyOwnerId>
+        <StrategyScore DataType="Numeric" Precision="0">0</StrategyScore>
+
+       </Strategy>
+
+      </StrategyList>
+      <TotalScore DataType="Numeric" Precision="0">0</TotalScore>
+
+     </FraudInfo>
+     <GroupId DataType="String">order_number_1</GroupId>
+     <Id DataType="String">order_number_1</Id>
+     <Mode DataType="String">Y</Mode>
+     <Transaction>
+      <AuthCode DataType="String">925967</AuthCode>
+      <CardProcResp>
+       <CcErrCode DataType="S32">1</CcErrCode>
+       <CcReturnMsg DataType="String">Approved.</CcReturnMsg>
+       <ProcReturnCode DataType="String">1</ProcReturnCode>
+       <ProcReturnMsg DataType="String">Approved</ProcReturnMsg>
+       <Status DataType="String">1</Status>
+
+      </CardProcResp>
+      <CardholderPresentCode DataType="S32">7</CardholderPresentCode>
+      <CurrentTotals>
+       <Totals>
+        <Total DataType="Money" Currency="826">100</Total>
+
+       </Totals>
+
+      </CurrentTotals>
+      <Id DataType="String">4a12be4b-c308-3002-002b-0003ba1d84d5</Id>
+      <InputEnvironment DataType="S32">4</InputEnvironment>
+      <SecurityIndicator DataType="S32">7</SecurityIndicator>
+      <TerminalInputCapability DataType="S32">1</TerminalInputCapability>
+      <Type DataType="String">Auth</Type>
+
+     </Transaction>
+
+    </OrderFormDoc>
+    <Overview>
+     <AuthCode DataType="String">925967</AuthCode>
+     <CcErrCode DataType="S32">1</CcErrCode>
+     <CcReturnMsg DataType="String">Approved.</CcReturnMsg>
+     <DateTime DataType="DateTime">1248267525896</DateTime>
+     <FraudStatus DataType="String">None</FraudStatus>
+     <FraudWeight DataType="Numeric" Precision="0">0</FraudWeight>
+     <Mode DataType="String">Y</Mode>
+     <OrderId DataType="String">order_number_1</OrderId>
+     <TransactionId DataType="String">4a12be4b-c308-3002-002b-0003ba1d84d5</TransactionId>
+     <TransactionStatus DataType="String">A</TransactionStatus>
+
+    </Overview>
+    <User>
+     <Alias DataType="String">UK11111199GBP</Alias>
+     <ClientId DataType="S32">359</ClientId>
+     <EffectiveAlias DataType="String">UK11111199GBP</EffectiveAlias>
+     <EffectiveClientId DataType="S32">359</EffectiveClientId>
+     <Name DataType="String">prada</Name>
+     <Password DataType="String">XXXXXXX</Password>
+
+    </User>
+
+   </EngineDoc>
+   <TimeIn DataType="DateTime">1248267525887</TimeIn>
+   <TimeOut DataType="DateTime">1248267525987</TimeOut>
+
+  </EngineDocList>
   XMLEOF
   end
 
+  def insufficient_permission_response
+    <<-XMLEOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <EngineDocList>
+     <DocVersion DataType="String">1.0</DocVersion>
+     <EngineDoc>
+      <ContentType DataType="String">OrderFormDoc</ContentType>
+      <DocumentId DataType="String">4a12be4b-c2fc-3002-002b-0003ba1d84d5</DocumentId>
+      <Instructions>
+       <Pipeline DataType="String">Payment</Pipeline>
+
+      </Instructions>
+      <MessageList>
+       <MaxSev DataType="S32">6</MaxSev>
+       <Message>
+        <AdvisedAction DataType="S32">16</AdvisedAction>
+        <Audience DataType="String">Merchant</Audience>
+        <Component DataType="String">Director</Component>
+        <ContextId DataType="String">Director</ContextId>
+        <DataState DataType="S32">3</DataState>
+        <FileLine DataType="S32">902</FileLine>
+        <FileName DataType="String">CcxInput.cpp</FileName>
+        <FileTime DataType="String">14:32:10Oct 13 2007</FileTime>
+        <ResourceId DataType="S32">7</ResourceId>
+        <Sev DataType="S32">6</Sev>
+        <Text DataType="String">Insufficient permissions to perform requested operation.</Text>
+
+       </Message>
+
+      </MessageList>
+      <OrderFormDoc>
+       <Consumer>
+        <PaymentMech>
+         <CreditCard>
+          <Expires DataType="ExpirationDate">05/07</Expires>
+          <Number DataType="String">4111111111111111</Number>
+
+         </CreditCard>
+         <Type DataType="String">CreditCard</Type>
+
+        </PaymentMech>
+
+       </Consumer>
+       <Id DataType="String">order_number_1</Id>
+       <Mode DataType="String">P</Mode>
+       <Transaction>
+        <CurrentTotals>
+         <Totals>
+          <Total DataType="Money" Currency="826">100</Total>
+
+         </Totals>
+
+        </CurrentTotals>
+        <Type DataType="String">Auth</Type>
+
+       </Transaction>
+
+      </OrderFormDoc>
+      <User>
+       <ClientId DataType="S32">99999</ClientId>
+       <Name DataType="String">prada</Name>
+       <Password DataType="String">ab123456</Password>
+
+      </User>
+
+     </EngineDoc>
+     <TimeIn DataType="DateTime">1248267232472</TimeIn>
+     <TimeOut DataType="DateTime">1248267232481</TimeOut>
+
+    </EngineDocList>
+    XMLEOF
+  end
+
+  def forged_multi_message_response
+    <<-XMLEOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <EngineDocList>
+     <DocVersion DataType="String">1.0</DocVersion>
+     <EngineDoc>
+      <ContentType DataType="String">OrderFormDoc</ContentType>
+      <DocumentId DataType="String">4a12be4b-c2fc-3002-002b-0003ba1d84d5</DocumentId>
+      <Instructions>
+       <Pipeline DataType="String">Payment</Pipeline>
+
+      </Instructions>
+      <MessageList>
+       <MaxSev DataType="S32">6</MaxSev>
+       <Message>
+        <AdvisedAction DataType="S32">16</AdvisedAction>
+        <Audience DataType="String">Merchant</Audience>
+        <Component DataType="String">Director</Component>
+        <ContextId DataType="String">Director</ContextId>
+        <DataState DataType="S32">3</DataState>
+        <FileLine DataType="S32">902</FileLine>
+        <FileName DataType="String">CcxInput.cpp</FileName>
+        <FileTime DataType="String">14:32:10Oct 13 2007</FileTime>
+        <ResourceId DataType="S32">7</ResourceId>
+        <Sev DataType="S32">6</Sev>
+        <Text DataType="String">Insufficient permissions to perform requested operation.</Text>
+
+       </Message>
+       <Message>
+        <AdvisedAction DataType="S32">16</AdvisedAction>
+        <Audience DataType="String">Merchant</Audience>
+        <Component DataType="String">Director</Component>
+        <ContextId DataType="String">Director</ContextId>
+        <DataState DataType="S32">3</DataState>
+        <FileLine DataType="S32">902</FileLine>
+        <FileName DataType="String">CcxInput.cpp</FileName>
+        <FileTime DataType="String">14:32:10Oct 13 2007</FileTime>
+        <ResourceId DataType="S32">7</ResourceId>
+        <Sev DataType="S32">6</Sev>
+        <Text DataType="String">Insufficient permissions to perform requested operation.</Text>
+
+       </Message>
+
+      </MessageList>
+      <OrderFormDoc>
+       <Consumer>
+        <PaymentMech>
+         <CreditCard>
+          <Expires DataType="ExpirationDate">05/07</Expires>
+          <Number DataType="String">4111111111111111</Number>
+
+         </CreditCard>
+         <Type DataType="String">CreditCard</Type>
+
+        </PaymentMech>
+
+       </Consumer>
+       <Id DataType="String">order_number_1</Id>
+       <Mode DataType="String">P</Mode>
+       <Transaction>
+        <CurrentTotals>
+         <Totals>
+          <Total DataType="Money" Currency="826">100</Total>
+
+         </Totals>
+
+        </CurrentTotals>
+        <Type DataType="String">Auth</Type>
+
+       </Transaction>
+
+      </OrderFormDoc>
+      <User>
+       <ClientId DataType="S32">99999</ClientId>
+       <Name DataType="String">prada</Name>
+       <Password DataType="String">ab123456</Password>
+
+      </User>
+
+     </EngineDoc>
+     <TimeIn DataType="DateTime">1248267232472</TimeIn>
+     <TimeOut DataType="DateTime">1248267232481</TimeOut>
+
+    </EngineDocList>
+    XMLEOF
+  end
+  
   def prepare_for_comparison(string)
     string.gsub(/\s{2,}/, ' ').gsub(/(\/?)> </, "#{$1}><")
   end
