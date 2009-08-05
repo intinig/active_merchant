@@ -83,6 +83,11 @@ class HsbcTest < Test::Unit::TestCase
     request = @gateway.send(:build_authorize_request, @amount, @credit_card, @options)
     assert_equal_xml successful_authorize_request, request
   end
+
+  def test_should_build_successful_authorize_request_with_payer_authentication
+    request = @gateway.send(:build_authorize_request, @amount, @credit_card, @options.merge({:payer_authentication_code => 'ciao'}))
+    assert request.match(/PayerAuthenticationCode/)
+  end
   
   def test_successful_authorize
     @gateway.expects(:ssl_post).returns(successful_authorize_response)

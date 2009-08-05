@@ -23,6 +23,11 @@ class RemoteHsbcTest < Test::Unit::TestCase
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     assert_success response
   end
+
+  def test_successful_authorize_with_pas
+    assert response = @gateway.authorize(@amount, @credit_card, @options.merge({:payer_authentication_code => "gemelli"}))
+    assert_success response
+  end
   
   def test_successful_authorize_and_capture
     assert response = @gateway.authorize(@amount, @credit_card, @options)

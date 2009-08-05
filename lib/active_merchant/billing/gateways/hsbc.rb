@@ -179,7 +179,7 @@ module ActiveMerchant #:nodoc:
           orderformdoc.Id(options[:order_id])
           orderformdoc.Mode(@options[:mode])
           add_consumer(orderformdoc, creditcard)
-          add_transaction(orderformdoc, money, type)
+          add_transaction(orderformdoc, money, type, options)
         end # orderformdoc
       end
             
@@ -197,8 +197,9 @@ module ActiveMerchant #:nodoc:
       end
       
       # implemented
-      def add_transaction(orderformdoc, money, type = "PreAuth")
+      def add_transaction(orderformdoc, money, type = "PreAuth", options = {})
         orderformdoc.Transaction do |transaction|
+          transaction.PayerAuthenticationCode(options[:payer_authentication_code]) if options[:payer_authentication_code]
           transaction.Type(type)
           transaction.CurrentTotals do |currenttotals|
             currenttotals.Totals do |totals|
