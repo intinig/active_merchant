@@ -48,6 +48,8 @@ module ActiveMerchant #:nodoc:
       
       # auth
       def purchase(money, creditcard, options = {})
+        requires!(options, :order_id)        
+        response = commit(build_purchase_request(money, creditcard, options))        
       end                       
     
       # postauth
@@ -106,12 +108,6 @@ module ActiveMerchant #:nodoc:
         success, message, options = parse(ssl_post(hsbc_url, request))        
         Response.new(success, message, options, options.merge(:test => test?))
       end
-
-      def message_from(response)
-      end
-      
-      def post_data(action, parameters = {})
-      end
       
       protected
       
@@ -134,8 +130,14 @@ module ActiveMerchant #:nodoc:
 
       def build_authorize_request(money, creditcard, options)
         build_request do |request|
-          add_preauth_order_form_doc(request, money, creditcard, options)
+          add_auth_order_form_doc(request, money, creditcard, options)
         end # enginedoc
+      end
+      
+      def build_purchase_request(money, creditcard, options)
+        build_request do |request|
+          add_auth_order_form_doc(request, money, creditcard, options, "Auth")
+        end
       end
       
       def build_capture_request(options)
@@ -172,12 +174,12 @@ module ActiveMerchant #:nodoc:
       end
       
       # implemented
-      def add_preauth_order_form_doc(request, money, creditcard, options)
+      def add_auth_order_form_doc(request, money, creditcard, options, type = "PreAuth")
         request.OrderFormDoc do |orderformdoc|
           orderformdoc.Id(options[:order_id])
           orderformdoc.Mode(@options[:mode])
           add_consumer(orderformdoc, creditcard)
-          add_transaction(orderformdoc, money)
+          add_transaction(orderformdoc, money, type)
         end # orderformdoc
       end
             
@@ -195,9 +197,9 @@ module ActiveMerchant #:nodoc:
       end
       
       # implemented
-      def add_transaction(orderformdoc, money)
+      def add_transaction(orderformdoc, money, type = "PreAuth")
         orderformdoc.Transaction do |transaction|
-          transaction.Type("PreAuth")
+          transaction.Type(type)
           transaction.CurrentTotals do |currenttotals|
             currenttotals.Totals do |totals|
               totals.Total(money.cents, "DataType" => "Money", "Currency" => CURRENCY_CODES[money.currency])
