@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + "/hsbc/hsbc_builder"
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class HsbcGateway < Gateway
-      TEST_URL = 'ttps://www.uat.apixml.netq.hsbc.com'
+      TEST_URL = 'https://www.uat.apixml.netq.hsbc.com'
       LIVE_URL = 'https://www.secure-epayments.apixml.hsbc.com'
       
       CURRENCY_CODES = {
@@ -28,7 +28,7 @@ module ActiveMerchant #:nodoc:
       self.money_format = :cents
 
       # Default currency
-      self.default_currency = "EUR"
+      self.default_currency = "GBP"
       
       def initialize(options = {})
         requires!(options, :client_id, :name, :password)
@@ -52,6 +52,8 @@ module ActiveMerchant #:nodoc:
     
       # postauth
       def capture(money, authorization, options = {})
+        requires!(options, :order_id)
+        response = commit(build_capture_request(money, options))
       end
     
       # void
@@ -116,20 +118,28 @@ module ActiveMerchant #:nodoc:
         xml.instruct!
         xml.EngineDocList do
           xml.DocVersion("1.0")
-          xml.EngineDoc &block
+          xml.EngineDoc do |enginedoc|
+            enginedoc.ContentType("OrderFormDoc")
+            add_user_data(enginedoc)
+            enginedoc.Instructions do |instructions|
+              instructions.Pipeline(@options[:pipeline])
+            end
+            yield enginedoc
+          end 
         end
         request
       end
 
       def build_authorize_request(money, creditcard, options)
         build_request do |request|
-          request.ContentType("OrderFormDoc")
-          add_user_data(request)
-          request.Instructions do |instructions|
-            instructions.Pipeline(@options[:pipeline])
-          end
-          add_order_form_doc(request, money, creditcard, options)
+          add_preauth_order_form_doc(request, money, creditcard, options)
         end # enginedoc
+      end
+      
+      def build_capture_request(money, options)
+        build_request do |request|
+          add_postauth_order_form_doc(request, options)
+        end
       end
       
       # implemented
@@ -142,12 +152,22 @@ module ActiveMerchant #:nodoc:
       end
       
       # implemented
-      def add_order_form_doc(request, money, creditcard, options)
+      def add_preauth_order_form_doc(request, money, creditcard, options)
         request.OrderFormDoc do |orderformdoc|
           orderformdoc.Id(options[:order_id])
           orderformdoc.Mode(@options[:mode])
           add_consumer(orderformdoc, creditcard)
           add_transaction(orderformdoc, money)
+        end # orderformdoc
+      end
+      
+      def add_postauth_order_form_doc(request, options)
+        request.OrderFormDoc do |orderformdoc|
+          orderformdoc.Id(options[:order_id])
+          orderformdoc.Mode(@options[:mode])
+          orderformdoc.Transaction do |transaction|
+            transaction.Type("PostAuth")
+          end
         end # orderformdoc
       end
       
@@ -167,7 +187,7 @@ module ActiveMerchant #:nodoc:
       # implemented
       def add_transaction(orderformdoc, money)
         orderformdoc.Transaction do |transaction|
-          transaction.Type("Auth")
+          transaction.Type("PreAuth")
           transaction.CurrentTotals do |currenttotals|
             currenttotals.Totals do |totals|
               totals.Total(money.cents, "DataType" => "Money", "Currency" => CURRENCY_CODES[money.currency])
@@ -186,7 +206,8 @@ module ActiveMerchant #:nodoc:
       
       def get_key_from_response(response, path)
         xpath = path.split(".").join("/")
-        response["/#{xpath}"].text
+        key = response["/#{xpath}"]
+        key.nil? ? nil : key.text
       end
       
       def get_message_from_response(response)
