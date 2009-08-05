@@ -103,7 +103,7 @@ class HsbcTest < Test::Unit::TestCase
   end
 
   def test_should_build_successful_capture_request
-    request = @gateway.send(:build_capture_request, @amount, @options)
+    request = @gateway.send(:build_capture_request, @options)
     assert_equal_xml successful_capture_request, request
   end
   
@@ -111,6 +111,20 @@ class HsbcTest < Test::Unit::TestCase
     @gateway.expects(:ssl_post).returns(successful_capture_response)
     
     assert response = @gateway.capture(@amount, nil, @options)
+    assert_success response
+    
+    assert response.test?
+  end
+
+  def test_should_build_successful_void_request
+    request = @gateway.send(:build_void_request, @options)
+    assert_equal_xml successful_void_request, request
+  end
+  
+  def test_successful_capture
+    @gateway.expects(:ssl_post).returns(successful_void_response)
+    
+    assert response = @gateway.void(@amount, nil, @options)
     assert_success response
     
     assert response.test?
@@ -573,7 +587,122 @@ class HsbcTest < Test::Unit::TestCase
     </EngineDocList>
     XML
   end
+
+  def successful_void_request
+  <<-XMLEOF
+  <?xml version="1.0" encoding="UTF-8" ?> 
+    <EngineDocList>
+      <DocVersion DataType="String">1.0</DocVersion>
+      <EngineDoc>
+        <ContentType DataType="String">OrderFormDoc</ContentType>
+        <User>
+          <ClientId DataType="S32">359</ClientId>
+          <Name DataType="String">prada</Name>
+          <Password DataType="String">ab123456</Password>
+        </User>
+        <Instructions>
+          <Pipeline DataType="String">Payment</Pipeline>
+        </Instructions>
+        <OrderFormDoc>
+          <Id DataType="String">order_number_2</Id>
+          <Mode DataType="String">Y</Mode>
+          <Transaction>
+            <Type DataType="String">Void</Type>
+          </Transaction>
+        </OrderFormDoc>
+      </EngineDoc>
+    </EngineDocList>    
+    XMLEOF
+  end
   
+  def successful_void_response
+    <<-XMLEOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <EngineDocList>
+     <DocVersion DataType="String">1.0</DocVersion>
+     <EngineDoc>
+      <ContentType DataType="String">OrderFormDoc</ContentType>
+      <DocumentId DataType="String">4a12be4b-eaac-3002-002b-0003ba1d84d5</DocumentId>
+      <Instructions>
+       <Pipeline DataType="String">Payment</Pipeline>
+
+      </Instructions>
+      <MessageList>
+
+      </MessageList>
+      <OrderFormDoc>
+       <Consumer>
+        <PaymentMech>
+         <CreditCard>
+          <ExchangeType DataType="S32">1</ExchangeType>
+
+         </CreditCard>
+         <Type DataType="String">CreditCard</Type>
+
+        </PaymentMech>
+
+       </Consumer>
+       <DateTime DataType="DateTime">1249473552620</DateTime>
+       <Id DataType="String">g2</Id>
+       <Mode DataType="String">Y</Mode>
+       <Transaction>
+        <AuthCode DataType="String">100972</AuthCode>
+        <CaptureDate DataType="DateTime">1249470912000</CaptureDate>
+        <CardProcResp>
+         <CcErrCode DataType="S32">1</CcErrCode>
+         <CcReturnMsg DataType="String">Approved.</CcReturnMsg>
+         <ProcReturnCode DataType="String">1</ProcReturnCode>
+         <ProcReturnMsg DataType="String">Approved</ProcReturnMsg>
+         <Status DataType="String">1</Status>
+
+        </CardProcResp>
+        <CardholderPresentCode DataType="S32">7</CardholderPresentCode>
+        <ChargeTypeCode DataType="String">S</ChargeTypeCode>
+        <CurrentTotals>
+         <Totals>
+          <Total DataType="Money" Currency="826">100</Total>
+
+         </Totals>
+
+        </CurrentTotals>
+        <Id DataType="String">4a12be4b-ea45-3002-002b-0003ba1d84d5</Id>
+        <InputEnvironment DataType="S32">4</InputEnvironment>
+        <ReviewPendFlag DataType="S32">0</ReviewPendFlag>
+        <SecurityIndicator DataType="S32">7</SecurityIndicator>
+        <TerminalInputCapability DataType="S32">1</TerminalInputCapability>
+        <Type DataType="String">Void</Type>
+
+       </Transaction>
+
+      </OrderFormDoc>
+      <Overview>
+       <AuthCode DataType="String">100972</AuthCode>
+       <CcErrCode DataType="S32">1</CcErrCode>
+       <CcReturnMsg DataType="String">Approved.</CcReturnMsg>
+       <DateTime DataType="DateTime">1249473552620</DateTime>
+       <Mode DataType="String">Y</Mode>
+       <OrderId DataType="String">g2</OrderId>
+       <TransactionId DataType="String">4a12be4b-ea45-3002-002b-0003ba1d84d5</TransactionId>
+       <TransactionStatus DataType="String">A</TransactionStatus>
+
+      </Overview>
+      <User>
+       <Alias DataType="String">UK11111199GBP</Alias>
+       <ClientId DataType="S32">359</ClientId>
+       <EffectiveAlias DataType="String">UK11111199GBP</EffectiveAlias>
+       <EffectiveClientId DataType="S32">359</EffectiveClientId>
+       <Name DataType="String">prada</Name>
+       <Password DataType="String">XXXXXXX</Password>
+
+      </User>
+
+     </EngineDoc>
+     <TimeIn DataType="DateTime">1249473552609</TimeIn>
+     <TimeOut DataType="DateTime">1249473552710</TimeOut>
+
+    </EngineDocList>
+    XMLEOF
+  end
   def prepare_for_comparison(string)
     string.gsub(/\s{2,}/, ' ').gsub(/(\/?)> </, "#{$1}><")
   end

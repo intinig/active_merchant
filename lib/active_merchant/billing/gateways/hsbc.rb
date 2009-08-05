@@ -53,11 +53,13 @@ module ActiveMerchant #:nodoc:
       # postauth
       def capture(money, authorization, options = {})
         requires!(options, :order_id)
-        response = commit(build_capture_request(money, options))
+        response = commit(build_capture_request(options))
       end
     
       # void
-      def void(moeny, authorization, options = {})
+      def void(money, authorization, options = {})
+        requires!(options, :order_id)
+        response = commit(build_void_request(options))
       end
       
       # credit
@@ -136,9 +138,27 @@ module ActiveMerchant #:nodoc:
         end # enginedoc
       end
       
-      def build_capture_request(money, options)
+      def build_capture_request(options)
         build_request do |request|
-          add_postauth_order_form_doc(request, options)
+          request.OrderFormDoc do |orderformdoc|
+            orderformdoc.Id(options[:order_id])
+            orderformdoc.Mode(@options[:mode])
+            orderformdoc.Transaction do |transaction|
+              transaction.Type("PostAuth")
+            end
+          end # orderformdoc
+        end
+      end
+
+      def build_void_request(options)
+        build_request do |request|
+          request.OrderFormDoc do |orderformdoc|
+            orderformdoc.Id(options[:order_id])
+            orderformdoc.Mode(@options[:mode])
+            orderformdoc.Transaction do |transaction|
+              transaction.Type("Void")
+            end
+          end # orderformdoc
         end
       end
       
@@ -160,17 +180,7 @@ module ActiveMerchant #:nodoc:
           add_transaction(orderformdoc, money)
         end # orderformdoc
       end
-      
-      def add_postauth_order_form_doc(request, options)
-        request.OrderFormDoc do |orderformdoc|
-          orderformdoc.Id(options[:order_id])
-          orderformdoc.Mode(@options[:mode])
-          orderformdoc.Transaction do |transaction|
-            transaction.Type("PostAuth")
-          end
-        end # orderformdoc
-      end
-      
+            
       # implemented
       def add_consumer(orderformdoc, creditcard)
         orderformdoc.Consumer do |consumer|

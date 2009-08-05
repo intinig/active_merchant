@@ -30,6 +30,13 @@ class RemoteHsbcTest < Test::Unit::TestCase
     assert_success response
   end
   
+  def test_successful_authorize_capture_and_void
+    assert response = @gateway.authorize(@amount, @credit_card, @options)
+    assert response = @gateway.capture(@amount, nil, @options)
+    assert response = @gateway.void(@amount, nil, @options)
+    assert_success response
+  end
+  
   # def test_successful_purchase
   #   assert response = @gateway.purchase(@amount, @credit_card, @options)
   #   assert_success response
