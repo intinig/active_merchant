@@ -69,19 +69,7 @@ module ActiveMerchant #:nodoc:
         response = commit(build_refund_request(money, creditcard, options))
       end
       private                       
-      
-      def add_customer_data(post, options)
-      end
-
-      def add_address(post, creditcard, options)      
-      end
-
-      def add_invoice(post, options)
-      end
-      
-      def add_creditcard(post, creditcard)      
-      end
-      
+            
       def parse(body)  
         #todo vbv authorization, look for PayerAuthenticationCode
             
