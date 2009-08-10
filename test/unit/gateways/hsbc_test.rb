@@ -78,10 +78,9 @@ class HsbcTest < Test::Unit::TestCase
     message = @gateway.send(:get_message_from_response, r)
     assert_equal "Insufficient permissions to perform requested operation., Insufficient permissions to perform requested operation.", message
   end
-
+  
   def test_should_build_successful_authorize_request
-    request = @gateway.send(:build_authorize_request, @amount, @credit_card, @options)
-    assert_equal_xml successful_authorize_request, request
+    assert_successful_build("authorize", @amount, @credit_card, @options)
   end
 
   def test_should_build_successful_authorize_request_with_payer_authentication
@@ -90,12 +89,7 @@ class HsbcTest < Test::Unit::TestCase
   end
   
   def test_successful_authorize
-    @gateway.expects(:ssl_post).returns(successful_authorize_response)
-    
-    assert response = @gateway.authorize(@amount, @credit_card, @options)
-    assert_success response
-    
-    assert response.test?
+    assert_successful_request("authorize", @amount, @credit_card, @options)
   end
     
   def test_failed_authorize
@@ -108,45 +102,27 @@ class HsbcTest < Test::Unit::TestCase
   end
 
   def test_should_build_successful_capture_request
-    request = @gateway.send(:build_capture_request, @options)
-    assert_equal_xml successful_capture_request, request
+    assert_successful_build("capture", @options)
   end
   
   def test_successful_capture
-    @gateway.expects(:ssl_post).returns(successful_capture_response)
-    
-    assert response = @gateway.capture(@amount, nil, @options)
-    assert_success response
-    
-    assert response.test?
+    assert_successful_request("capture", @amount, nil, @options)
   end
   
   def test_should_build_successful_void_request
-    request = @gateway.send(:build_void_request, @options)
-    assert_equal_xml successful_void_request, request
+    assert_successful_build("void", @options)
   end
 
   def test_successful_void
-    @gateway.expects(:ssl_post).returns(successful_void_response)
-    
-    assert response = @gateway.void(@amount, nil, @options)
-    assert_success response
-    
-    assert response.test?
+    assert_successful_request("void", @amount, nil, @options)
   end
   
-  def test_should_build_succesful_credit_request
-    request = @gateway.send(:build_credit_request, @amount, @credit_card, @options)
-    assert_equal_xml successful_credit_request, request
+  def test_should_build_successful_refund_request
+    assert_successful_build("refund", @amount, @credit_card, @options)
   end
 
   def test_successful_refund
-    @gateway.expects(:ssl_post).returns(successful_credit_response)
-    
-    assert response = @gateway.refund(@amount, @credit_card, @options)
-    assert_success response
-    
-    assert response.test?
+    assert_successful_request("refund", @amount, @credit_card, @options)
   end
   
   protected
@@ -723,7 +699,7 @@ class HsbcTest < Test::Unit::TestCase
     XMLEOF
   end
 
-  def successful_credit_request
+  def successful_refund_request
     <<-XMLEOF
     <?xml version="1.0" encoding="UTF-8" ?> 
       <EngineDocList>
@@ -763,7 +739,7 @@ class HsbcTest < Test::Unit::TestCase
       XMLEOF
   end
   
-  def successful_credit_response
+  def successful_refund_response
     <<-XMLEOF
     <?xml version="1.0" encoding="UTF-8"?>
     <EngineDocList>
@@ -886,5 +862,18 @@ class HsbcTest < Test::Unit::TestCase
       :test => test
     )
   end
+
+  def assert_successful_build(operation, *options)
+    request = @gateway.send("build_#{operation}_request", *options)
+    assert_equal_xml send("successful_#{operation}_request"), request
+  end
   
+  def assert_successful_request(operation, *options)
+    @gateway.expects(:ssl_post).returns(send("successful_#{operation}_response"))
+    
+    assert response = @gateway.send(operation, *options)
+    assert_success response
+    
+    assert response.test?
+  end
 end

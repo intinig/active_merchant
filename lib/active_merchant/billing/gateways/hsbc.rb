@@ -66,7 +66,7 @@ module ActiveMerchant #:nodoc:
       
       # credit
       def refund(money, creditcard, options = {})
-        response = commit(build_credit_request(money, creditcard, options))
+        response = commit(build_refund_request(money, creditcard, options))
       end
       private                       
       
@@ -165,7 +165,7 @@ module ActiveMerchant #:nodoc:
         end
       end
       
-      def build_credit_request(money, creditcard, options)
+      def build_refund_request(money, creditcard, options)
         build_request do |request|
           request.OrderFormDoc do |orderformdoc|
             orderformdoc.Mode(@options[:mode])
