@@ -120,16 +120,30 @@ class HsbcTest < Test::Unit::TestCase
     
     assert response.test?
   end
-
+  
   def test_should_build_successful_void_request
     request = @gateway.send(:build_void_request, @options)
     assert_equal_xml successful_void_request, request
   end
-  
-  def test_successful_capture
+
+  def test_successful_void
     @gateway.expects(:ssl_post).returns(successful_void_response)
     
     assert response = @gateway.void(@amount, nil, @options)
+    assert_success response
+    
+    assert response.test?
+  end
+  
+  def test_should_build_succesful_credit_request
+    request = @gateway.send(:build_credit_request, @amount, @credit_card, @options)
+    assert_equal_xml successful_credit_request, request
+  end
+
+  def test_successful_refund
+    @gateway.expects(:ssl_post).returns(successful_credit_response)
+    
+    assert response = @gateway.refund(@amount, @credit_card, @options)
     assert_success response
     
     assert response.test?
@@ -708,6 +722,153 @@ class HsbcTest < Test::Unit::TestCase
     </EngineDocList>
     XMLEOF
   end
+
+  def successful_credit_request
+    <<-XMLEOF
+    <?xml version="1.0" encoding="UTF-8" ?> 
+      <EngineDocList>
+        <DocVersion DataType="String">1.0</DocVersion>
+        <EngineDoc>
+          <ContentType DataType="String">OrderFormDoc</ContentType>
+          <User>
+            <ClientId DataType="S32">359</ClientId>
+            <Name DataType="String">prada</Name>
+            <Password DataType="String">ab123456</Password>
+          </User>
+          <Instructions>
+            <Pipeline DataType="String">Payment</Pipeline>
+          </Instructions>
+          <OrderFormDoc>
+            <Mode DataType="String">Y</Mode>
+            <Consumer>
+              <PaymentMech>
+                <Type DataType="String">CreditCard</Type>
+                <CreditCard>
+                  <Number DataType="String">4567350000427977</Number>
+                  <Expires DataType="ExpirationDate" Locale="826">05/07</Expires>
+                </CreditCard>
+              </PaymentMech>
+            </Consumer>
+            <Transaction>
+              <Type DataType="String">Credit</Type>
+              <CurrentTotals>
+                <Totals>
+                  <Total DataType="Money" Currency="826">100</Total>
+                </Totals>
+              </CurrentTotals>
+            </Transaction>
+          </OrderFormDoc>
+        </EngineDoc>
+      </EngineDocList>
+      XMLEOF
+  end
+  
+  def successful_credit_response
+    <<-XMLEOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <EngineDocList>
+     <DocVersion DataType="String">1.0</DocVersion>
+     <EngineDoc>
+      <ContentType DataType="String">OrderFormDoc</ContentType>
+      <DocumentId DataType="String">4a12be4b-f72c-3002-002b-0003ba1d84d5</DocumentId>
+      <Instructions>
+       <Pipeline DataType="String">Payment</Pipeline>
+
+      </Instructions>
+      <MessageList>
+
+      </MessageList>
+      <OrderFormDoc>
+       <Consumer>
+        <PaymentMech>
+         <CreditCard>
+          <Expires DataType="ExpirationDate">05/07</Expires>
+          <Number DataType="String">4111111111111111</Number>
+
+         </CreditCard>
+         <Type DataType="String">CreditCard</Type>
+
+        </PaymentMech>
+
+       </Consumer>
+       <DateTime DataType="DateTime">1249901144855</DateTime>
+       <FraudInfo>
+        <FraudResult DataType="String">None</FraudResult>
+        <FraudResultCode DataType="S32">0</FraudResultCode>
+        <OrderScore DataType="Numeric" Precision="0">0</OrderScore>
+        <StrategyList>
+         <Strategy>
+          <FraudAction DataType="String">None</FraudAction>
+          <StrategyId DataType="S32">1</StrategyId>
+          <StrategyName DataType="String">My Rules</StrategyName>
+          <StrategyOwnerId DataType="S32">359</StrategyOwnerId>
+          <StrategyScore DataType="Numeric" Precision="0">0</StrategyScore>
+
+         </Strategy>
+
+        </StrategyList>
+        <TotalScore DataType="Numeric" Precision="0">0</TotalScore>
+
+       </FraudInfo>
+       <GroupId DataType="String">4a12be4b-f72d-3002-002b-0003ba1d84d5</GroupId>
+       <Id DataType="String">4a12be4b-f72d-3002-002b-0003ba1d84d5</Id>
+       <Mode DataType="String">Y</Mode>
+       <Transaction>
+        <CardProcResp>
+         <CcErrCode DataType="S32">1</CcErrCode>
+         <CcReturnMsg DataType="String">Approved.</CcReturnMsg>
+         <ProcReturnCode DataType="String">1</ProcReturnCode>
+         <ProcReturnMsg DataType="String">Approved</ProcReturnMsg>
+         <Status DataType="String">1</Status>
+
+        </CardProcResp>
+        <CardholderPresentCode DataType="S32">7</CardholderPresentCode>
+        <CurrentTotals>
+         <Totals>
+          <Total DataType="Money" Currency="826">100</Total>
+
+         </Totals>
+
+        </CurrentTotals>
+        <Id DataType="String">4a12be4b-f72e-3002-002b-0003ba1d84d5</Id>
+        <InputEnvironment DataType="S32">4</InputEnvironment>
+        <SecurityIndicator DataType="S32">7</SecurityIndicator>
+        <TerminalInputCapability DataType="S32">1</TerminalInputCapability>
+        <Type DataType="String">Credit</Type>
+
+       </Transaction>
+
+      </OrderFormDoc>
+      <Overview>
+       <CcErrCode DataType="S32">1</CcErrCode>
+       <CcReturnMsg DataType="String">Approved.</CcReturnMsg>
+       <DateTime DataType="DateTime">1249901144855</DateTime>
+       <FraudStatus DataType="String">None</FraudStatus>
+       <FraudWeight DataType="Numeric" Precision="0">0</FraudWeight>
+       <Mode DataType="String">Y</Mode>
+       <OrderId DataType="String">4a12be4b-f72d-3002-002b-0003ba1d84d5</OrderId>
+       <TransactionId DataType="String">4a12be4b-f72e-3002-002b-0003ba1d84d5</TransactionId>
+       <TransactionStatus DataType="String">A</TransactionStatus>
+
+      </Overview>
+      <User>
+       <Alias DataType="String">UK11111199GBP</Alias>
+       <ClientId DataType="S32">359</ClientId>
+       <EffectiveAlias DataType="String">UK11111199GBP</EffectiveAlias>
+       <EffectiveClientId DataType="S32">359</EffectiveClientId>
+       <Name DataType="String">prada</Name>
+       <Password DataType="String">XXXXXXX</Password>
+
+      </User>
+
+     </EngineDoc>
+     <TimeIn DataType="DateTime">1249901144846</TimeIn>
+     <TimeOut DataType="DateTime">1249901144994</TimeOut>
+
+    </EngineDocList>
+    XMLEOF
+  end
+  
   def prepare_for_comparison(string)
     string.gsub(/\s{2,}/, ' ').gsub(/(\/?)> </, "#{$1}><")
   end

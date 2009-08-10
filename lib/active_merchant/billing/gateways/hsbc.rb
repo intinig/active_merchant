@@ -65,7 +65,8 @@ module ActiveMerchant #:nodoc:
       end
       
       # credit
-      def refund(money, authorization, options = {})
+      def refund(money, creditcard, options = {})
+        response = commit(build_credit_request(money, creditcard, options))
       end
       private                       
       
@@ -164,6 +165,23 @@ module ActiveMerchant #:nodoc:
         end
       end
       
+      def build_credit_request(money, creditcard, options)
+        build_request do |request|
+          request.OrderFormDoc do |orderformdoc|
+            orderformdoc.Mode(@options[:mode])
+            add_consumer(orderformdoc, creditcard)
+            orderformdoc.Transaction do |transaction|
+              transaction.Type("Credit")
+              transaction.CurrentTotals do |currenttotals|
+                currenttotals.Totals do |totals|
+                  totals.Total(money.cents, "DataType" => "Money", "Currency" => CURRENCY_CODES[money.currency])
+                end # totals
+              end # currenttotals
+            end
+          end # orderformdoc
+        end
+      end
+
       # implemented
       def add_user_data(request)
         request.User do |user|

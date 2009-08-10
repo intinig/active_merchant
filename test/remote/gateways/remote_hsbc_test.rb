@@ -47,4 +47,9 @@ class RemoteHsbcTest < Test::Unit::TestCase
     assert_success response
   end
   
+  def test_successful_refund
+    assert response = @gateway.refund(@amount, @credit_card, @options)
+    assert_success response
+  end
+  
 end
