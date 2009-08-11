@@ -1,5 +1,3 @@
-# require File.dirname(__FILE__) + '/gest_pay/gest_pay'
-
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class GestpayGateway < Gateway
