@@ -3,8 +3,8 @@ require File.dirname(__FILE__) + '/../../test_helper'
 class HsbcTest < Test::Unit::TestCase
   def setup
     @gateway = HsbcGateway.new(
-      :client_id => '359',
-      :name => 'prada',
+      :client_id => '007',
+      :name => 'test_account',
       :password => 'ab123456',
       :test => true
      )
@@ -28,7 +28,7 @@ class HsbcTest < Test::Unit::TestCase
   
   def test_should_require_name
     begin
-      g = HsbcGateway.new(:client_id => '359')
+      g = HsbcGateway.new(:client_id => '007')
     rescue Exception => e
       assert_equal "#<ArgumentError: Missing required parameter: name>", e.inspect
     end
@@ -36,7 +36,7 @@ class HsbcTest < Test::Unit::TestCase
 
   def test_should_require_password
     begin
-      g = HsbcGateway.new(:client_id => '359', :name => 'prada')
+      g = HsbcGateway.new(:client_id => '007', :name => 'test_account')
     rescue Exception => e
       assert_equal "#<ArgumentError: Missing required parameter: password>", e.inspect
     end
@@ -134,8 +134,8 @@ class HsbcTest < Test::Unit::TestCase
       <EngineDoc>
         <ContentType DataType="String">OrderFormDoc</ContentType>
         <User>
-          <ClientId DataType="S32">359</ClientId>
-          <Name DataType="String">prada</Name>
+          <ClientId DataType="S32">007</ClientId>
+          <Name DataType="String">test_account</Name>
           <Password DataType="String">ab123456</Password>
         </User>
         <Instructions>
@@ -205,7 +205,7 @@ class HsbcTest < Test::Unit::TestCase
         <FraudAction DataType="String">None</FraudAction>
         <StrategyId DataType="S32">1</StrategyId>
         <StrategyName DataType="String">My Rules</StrategyName>
-        <StrategyOwnerId DataType="S32">359</StrategyOwnerId>
+        <StrategyOwnerId DataType="S32">007</StrategyOwnerId>
         <StrategyScore DataType="Numeric" Precision="0">0</StrategyScore>
 
        </Strategy>
@@ -259,10 +259,10 @@ class HsbcTest < Test::Unit::TestCase
     </Overview>
     <User>
      <Alias DataType="String">UK11111199GBP</Alias>
-     <ClientId DataType="S32">359</ClientId>
+     <ClientId DataType="S32">007</ClientId>
      <EffectiveAlias DataType="String">UK11111199GBP</EffectiveAlias>
-     <EffectiveClientId DataType="S32">359</EffectiveClientId>
-     <Name DataType="String">prada</Name>
+     <EffectiveClientId DataType="S32">007</EffectiveClientId>
+     <Name DataType="String">test_account</Name>
      <Password DataType="String">XXXXXXX</Password>
 
     </User>
@@ -365,7 +365,7 @@ class HsbcTest < Test::Unit::TestCase
       </OrderFormDoc>
       <User>
        <ClientId DataType="S32">99999</ClientId>
-       <Name DataType="String">prada</Name>
+       <Name DataType="String">test_account</Name>
        <Password DataType="String">ab123456</Password>
 
       </User>
@@ -452,7 +452,7 @@ class HsbcTest < Test::Unit::TestCase
       </OrderFormDoc>
       <User>
        <ClientId DataType="S32">99999</ClientId>
-       <Name DataType="String">prada</Name>
+       <Name DataType="String">test_account</Name>
        <Password DataType="String">ab123456</Password>
 
       </User>
@@ -473,8 +473,8 @@ class HsbcTest < Test::Unit::TestCase
       <EngineDoc>
         <ContentType DataType="String">OrderFormDoc</ContentType>
         <User>
-          <ClientId DataType="S32">359</ClientId>
-          <Name DataType="String">prada</Name>
+          <ClientId DataType="S32">007</ClientId>
+          <Name DataType="String">test_account</Name>
           <Password DataType="String">ab123456</Password>
         </User>
         <Instructions>
@@ -567,10 +567,10 @@ class HsbcTest < Test::Unit::TestCase
       </Overview>
       <User>
        <Alias DataType="String">UK11111199GBP</Alias>
-       <ClientId DataType="S32">359</ClientId>
+       <ClientId DataType="S32">007</ClientId>
        <EffectiveAlias DataType="String">UK11111199GBP</EffectiveAlias>
-       <EffectiveClientId DataType="S32">359</EffectiveClientId>
-       <Name DataType="String">prada</Name>
+       <EffectiveClientId DataType="S32">007</EffectiveClientId>
+       <Name DataType="String">test_account</Name>
        <Password DataType="String">XXXXXXX</Password>
 
       </User>
@@ -591,8 +591,8 @@ class HsbcTest < Test::Unit::TestCase
       <EngineDoc>
         <ContentType DataType="String">OrderFormDoc</ContentType>
         <User>
-          <ClientId DataType="S32">359</ClientId>
-          <Name DataType="String">prada</Name>
+          <ClientId DataType="S32">007</ClientId>
+          <Name DataType="String">test_account</Name>
           <Password DataType="String">ab123456</Password>
         </User>
         <Instructions>
@@ -683,10 +683,10 @@ class HsbcTest < Test::Unit::TestCase
       </Overview>
       <User>
        <Alias DataType="String">UK11111199GBP</Alias>
-       <ClientId DataType="S32">359</ClientId>
+       <ClientId DataType="S32">007</ClientId>
        <EffectiveAlias DataType="String">UK11111199GBP</EffectiveAlias>
-       <EffectiveClientId DataType="S32">359</EffectiveClientId>
-       <Name DataType="String">prada</Name>
+       <EffectiveClientId DataType="S32">007</EffectiveClientId>
+       <Name DataType="String">test_account</Name>
        <Password DataType="String">XXXXXXX</Password>
 
       </User>
@@ -707,8 +707,8 @@ class HsbcTest < Test::Unit::TestCase
         <EngineDoc>
           <ContentType DataType="String">OrderFormDoc</ContentType>
           <User>
-            <ClientId DataType="S32">359</ClientId>
-            <Name DataType="String">prada</Name>
+            <ClientId DataType="S32">007</ClientId>
+            <Name DataType="String">test_account</Name>
             <Password DataType="String">ab123456</Password>
           </User>
           <Instructions>
@@ -777,7 +777,7 @@ class HsbcTest < Test::Unit::TestCase
           <FraudAction DataType="String">None</FraudAction>
           <StrategyId DataType="S32">1</StrategyId>
           <StrategyName DataType="String">My Rules</StrategyName>
-          <StrategyOwnerId DataType="S32">359</StrategyOwnerId>
+          <StrategyOwnerId DataType="S32">007</StrategyOwnerId>
           <StrategyScore DataType="Numeric" Precision="0">0</StrategyScore>
 
          </Strategy>
@@ -829,10 +829,10 @@ class HsbcTest < Test::Unit::TestCase
       </Overview>
       <User>
        <Alias DataType="String">UK11111199GBP</Alias>
-       <ClientId DataType="S32">359</ClientId>
+       <ClientId DataType="S32">007</ClientId>
        <EffectiveAlias DataType="String">UK11111199GBP</EffectiveAlias>
-       <EffectiveClientId DataType="S32">359</EffectiveClientId>
-       <Name DataType="String">prada</Name>
+       <EffectiveClientId DataType="S32">007</EffectiveClientId>
+       <Name DataType="String">test_account</Name>
        <Password DataType="String">XXXXXXX</Password>
 
       </User>
@@ -855,8 +855,8 @@ class HsbcTest < Test::Unit::TestCase
   
   def gateway_with_mode(mode, test = false)
     HsbcGateway.new(
-      :client_id => '359',
-      :name => 'prada',
+      :client_id => '007',
+      :name => 'test_account',
       :password => 'ab123456',
       :mode => mode,
       :test => test
