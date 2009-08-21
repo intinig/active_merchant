@@ -4,11 +4,7 @@ module ActiveMerchant #:nodoc:
       TEST_URL = 'https://testecomm.sella.it/Gestpay/'
       LIVE_URL = 'https://ecomm.sella.it/Gestpay/'
       VERSION = "S3.1.0"
-      
-      SEPARATOR = '*P1*'
-      REQUEST_PARAMS = [:PAY1_UICCODE, :PAY1_AMOUNT, :PAY1_SHOPTRANSACTIONID, :PAY1_CARDNUMBER, :PAY1_EXPMONTH, :PAY1_EXPYEAR, :PAY1_CHNAME, :PAY1_CVV, :PAY1_BANKTRANSACTIONID]
-      RESPONSE_PARAMS = ['PAY1_TRANSACTIONRESULT', 'PAY1_SHOPTRANSACTIONID', 'PAY1_BANKTRANSACTIONID', 'PAY1_UICCODE', 'PAY1_AMOUNT', 'PAY1_AUTHORIZATIONCODE', 'PAY1_ERRORCODE', 'PAY1_ERRORDESCRIPTION', 'PAY1_VBVRISP', 'PAY1_COUNTRY', 'PAY1_VBV', 'PAY1_ALERTCODE', 'PAY1_ALERTDESCRIPTION', 'PAY1_CHEMAIL', 'PAY1_CHNAME']
-            
+                  
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['IT']
       
