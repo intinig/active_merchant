@@ -44,36 +44,21 @@ module ActiveMerchant #:nodoc:
         requires!(options, :shop_transaction_id)
         requires_credit_card_name(creditcard)
         transaction_data = TransactionData.new({:money => money, :credit_card => creditcard}.merge(options))
-        resultcode, resultdescription, answerstring = parse(ssl_get(operation_url("PAGAMS2S.asp", transaction_data.to_str)))
-        transaction_response = TransactionData.new(answerstring)
-        Response.new(transaction_response.success?, resultdescription, transaction_response.attributes, options.merge(:test => test?))
+        get_response("PAGAMS2S.asp", transaction_data, options)
       end
-      
-      # def renounce(authorization, options = {})
-      #   parameters = {}
-      #   add_transaction_data(parameters, options)
-      #   parameters[:PAY1_BANKTRANSACTIONID] = authorization;
-      #   parameters[:PAY1_UICCODE] = '242'
-      #   commit('renounce', parameters)
-      # end
-      
-      # CallRenouceS2S
+            
+      # CallRenounceS2S
       def void(authorization, options = {})
-        parameters = {}
-        add_transaction_data(parameters, options)
-        parameters[:PAY1_BANKTRANSACTIONID] = authorization;
-        parameters[:PAY1_UICCODE] = '242'
-        commit('void', parameters)
+        requires!(options, :shop_transaction_id)
+        transaction_data = TransactionData.new(options)
+        get_response("Renounces2s.asp", transaction_data, options)
       end
       
       # CallSettleS2S
       def capture(money, authorization, options = {})
-        parameters = {}
-        add_transaction_amount(parameters, money)
-        add_transaction_data(parameters, options)
-        parameters[:PAY1_BANKTRANSACTIONID] = authorization;
-        parameters[:PAY1_UICCODE] = '242'
-        commit('capture', parameters)
+        requires!(options, :shop_transaction_id)
+        transaction_data = TransactionData.new({:money => money}.merge(options))
+        get_response("settles2s.asp", transaction_data, options)
       end
             
       class TransactionData
@@ -142,8 +127,8 @@ module ActiveMerchant #:nodoc:
               attributes[:cvv] = credit_card.verification_value
               attributes[:buyer_name] = credit_card.name
             end
-            
-            create_from_hash attributes.merge({:card_number => credit_card.number, })
+        
+            create_from_hash attributes
           elsif attributes.respond_to? :to_str
             create_from_string attributes.to_str
           end
@@ -207,53 +192,13 @@ module ActiveMerchant #:nodoc:
         
         [resultcode, resultdescription, answerstring]
       end
-                     
-      def get_response(data)
-        
-        response = {}
-        answerstring.split('*P1*').each {|r|
-          t = r.split('=')
-          # puts "#{t[0]}\t#{t[1]}"
-          response[t[0].to_sym] = t[1]
-        }
-        
-        return response
+      
+      def get_response(op, transaction_data, options)
+        resultcode, resultdescription, answerstring = parse(ssl_get(operation_url(op, transaction_data.to_str)))
+        transaction_response = TransactionData.new(answerstring)
+        Response.new(transaction_response.success?, resultdescription, transaction_response.attributes, options.merge(:test => test?))
       end
-
-      # def commit(endpoint, )
-      #   response = ssl_get()
-      #   
-      #   # success, message, options = parse(ssl_post(hsbc_url, request))        
-      #   # Response.new(success, message, options, options.merge(:test => test?))
-      # end
-      
-      # def commit(action, parameters)
-      # 
-      #   case action
-      #   when 'auth'
-      #     page = 'PAGAMS2S.asp'
-      #   when 'capture'
-      #     page = 'settles2s.asp'
-      #   when 'void'
-      #     page = 'deletes2s.asp'
-      #   when 'refund'
-      #     page = 'refunds2s.asp'
-      #   when 'renounce'
-      #     page = 'Renounces2s.asp'
-      #   end
-      # 
-      #   p = build_request parameters
-      #   a = "a="+CGI.escape(options[:shop_login])+"&b="+p+"&c="+CGI.escape(VERSION)
-      #   url = "https://#{gestpay_url}/Gestpay/#{page}?#{a}"
-      #   
-      #   site = Net::HTTP.new(TEST_URL, 443)
-      #   site.use_ssl = true
-      #   response = get_response(site.get2(url).body)
-      #   
-      #   Response.new((response[:PAY1_TRANSACTIONRESULT] == 'KO') ? false : true, response[:PAY1_ERRORDESCRIPTION], response)
-      #   
-      # end
-      
+                           
       def gestpay_url
         @options[:test] ? TEST_URL : LIVE_URL
       end
