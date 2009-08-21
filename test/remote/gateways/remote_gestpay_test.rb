@@ -1,4 +1,6 @@
 require 'test_helper'
+require 'nokogiri'
+require 'curb'
 
 class Net::HTTP
   alias_method :old_initialize, :initialize
@@ -36,10 +38,20 @@ class RemoteGestpayTest < Test::Unit::TestCase
   def test_successful_authorize
     assert response = @gateway.authorize(@amount, @credit_card, @options)
     if response.params["vbvrisp"]
-      result = ssl_get("https://testecomm.sella.it/gestpay/pagamvisa3d.asp?a=#{fixtures(:gestpay)[:shop_login]}&b=#{response.params["vbvrisp"]}&c=http://medlar.it")
+      result = Nokogiri::HTML(ssl_get("https://testecomm.sella.it/gestpay/pagamvisa3d.asp?a=#{fixtures(:gestpay)[:shop_login]}&b=#{response.params["vbvrisp"]}&c=http://medlar.it"))
+      action = result.search("form")[0].attribute("action")
+      parameters = []
+      result.search("form input").each do |el|
+        parameters << Curl::PostField.content(el.attribute("name").to_s, el.attribute("value").to_s)
+      end
+      result = Nokogiri::HTML(Curl::Easy.http_post(action, *parameters).body_str)
+      action = result.search("form")[0].attribute("action")
+      pares = result.search("form input[name=PaRes]")[0].attribute("value").to_s
+      assert response = @gateway.authorize(@amount, @credit_card, @options.merge({:pares => pares, :transkey => response.params["transkey"]}))
+      assert_success response
+    else
+      assert_success response
     end
-    puts result.match(/action="(.*)" method/)[1]
-    # assert_success response
   end
 
   # def test_successful_authorize_with_pas

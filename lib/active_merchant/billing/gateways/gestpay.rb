@@ -95,7 +95,9 @@ module ActiveMerchant #:nodoc:
           "PAY1_IDLANGUAGE"  => :language,
           "PAY1_MIN"         => :min,
           "PAY1_SHOPTRANSACTIONID" => :shop_transaction_id,
-          "PAY1_UICCODE"           => :currency
+          "PAY1_UICCODE"           => :currency,
+          "PAY1_PARES"            => :pares,
+          "PAY1_TRANSKEY"         => :transkey
         }
 
         RESPONSE_MAPPINGS = {
@@ -107,7 +109,8 @@ module ActiveMerchant #:nodoc:
           "PAY1_IDLANGUAGE" => :language,
           "PAY1_TRANSACTIONRESULT" => :transaction_result,
           "PAY1_VBV" => :vbv,
-          "PAY1_VBVRISP" => :vbvrisp
+          "PAY1_VBVRISP" => :vbvrisp,
+          "PAY1_TRANSKEY" => :transkey
         }
 
         ERROR_MAPPINGS = {
