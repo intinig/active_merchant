@@ -75,7 +75,7 @@ module ActiveMerchant #:nodoc:
             
         r = REXML::Document.new(body)
         response = r.root.elements
-        success = get_key_from_response(response, "EngineDocList.EngineDoc.OrderFormDoc.Transaction.CardProcResp.Status") == "1"
+        success = get_key_from_response(response, "EngineDocList.EngineDoc.OrderFormDoc.Transaction.CardProcResp.ProcReturnCode") == "00"
         document_id = get_key_from_response(response, "EngineDocList.EngineDoc.DocumentId")
         message = get_message_from_response(response)        
         fraud_info = {
