@@ -44,6 +44,10 @@ efsnet:
   login: X
   password: Y
 
+elavon:
+  login: LOGIN
+  password: PASSWORD
+
 # Working credentials, no need to replace
 eway:
   login: '87654321'
@@ -57,6 +61,10 @@ global_collect:
   merchant: login
   ip: 123.123.123.123
   
+first_pay:
+  login:
+  password:
+
 ideal_ing_postbank:
   login: LOGIN
   password: PASSWORD
@@ -67,6 +75,9 @@ instapay:
   login: TEST0
   password:
 
+jetpay:
+  login: TESTTERMINAL
+      
 linkpoint:
   login: STOREID
   pem: |--
@@ -95,6 +106,12 @@ net_registry:
   login: X
   password: Y
   
+ogone:
+  login: LOGIN
+  user: USER
+  password: PASSWORD
+  signature: SIGNATURE
+
 payflow:
   login: LOGIN
   password: PASSWORD
@@ -135,7 +152,7 @@ plugnpay:
   login: LOGIN
   password: PASSWORD
   
-protx:
+sage_pay:
   login: LOGIN
   
 # Working credentials, no need to replace
@@ -282,6 +299,9 @@ realex_mastercard_coms_error:
 sage:
   login: login
   password: password
+
+sallie_mae:
+  login: TEST0
 
 secure_pay:
   login: LOGIN
