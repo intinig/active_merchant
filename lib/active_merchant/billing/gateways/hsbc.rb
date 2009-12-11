@@ -1,5 +1,6 @@
 require File.dirname(__FILE__) + "/hsbc/hsbc_builder"
 
+
 module ActiveMerchant #:nodoc:
   module Billing #:nodoc:
     class HsbcGateway < Gateway
@@ -11,7 +12,7 @@ module ActiveMerchant #:nodoc:
         "GBP"  => "826",
         "USD"  => "840",
       }
-      
+
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       self.supported_countries = ['UK']
       
@@ -75,6 +76,7 @@ module ActiveMerchant #:nodoc:
             
         r = REXML::Document.new(body)
         response = r.root.elements
+        # changed by LUCAT
         success = get_key_from_response(response, "EngineDocList.EngineDoc.OrderFormDoc.Transaction.CardProcResp.ProcReturnCode") == "00"
         document_id = get_key_from_response(response, "EngineDocList.EngineDoc.DocumentId")
         message = get_message_from_response(response)        
@@ -94,7 +96,7 @@ module ActiveMerchant #:nodoc:
       end     
       
       def commit(request)
-        success, message, options = parse(ssl_post(hsbc_url, request))        
+        success, message, options = parse(ssl_post(hsbc_url, request))
         Response.new(success, message, options, options.merge(:test => test?))
       end
       
@@ -205,13 +207,16 @@ module ActiveMerchant #:nodoc:
       # implemented
       def add_transaction(orderformdoc, money, type = "PreAuth", options = {})
         orderformdoc.Transaction do |transaction|
-          transaction.PayerAuthenticationCode(options[:payer_authentication_code]) if options[:payer_authentication_code]
           transaction.Type(type)
           transaction.CurrentTotals do |currenttotals|
             currenttotals.Totals do |totals|
               totals.Total(money.cents, "DataType" => "Money", "Currency" => CURRENCY_CODES[money.currency])
             end # totals
           end # currenttotals
+          transaction.PayerSecurityLevel(options[:payer_security_level]) if options[:payer_security_level]  # changed by LUCAT
+          transaction.PayerAuthenticationCode(options[:payer_authentication_code]) if options[:payer_authentication_code]
+          transaction.PayerTxnId(options[:payer_txn_id]) if options[:payer_txn_id]                          # changed by LUCAT
+          transaction.CardholderPresentCode(options[:cardholder_present_code]) if options[:cardholder_present_code] # changed by LUCAT
         end # transaction
       end
       
