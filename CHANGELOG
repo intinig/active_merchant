@@ -1,5 +1,12 @@
 = ActiveMerchant CHANGELOG
 
+* Fix documentation typo in base.rb [mig-hub]
+* Add capture test to Linkpoint [Dusty Doris]
+* Fix bug in Linkpoint with ternary operator and Ruby 1.9.1 [Dusty Doris]
+* Add currency and processor options to Braintree gateway [cbillen]
+* Unify API to always look for billing_address/address hash inside of options [stopdropandrew]
+* Fix bug with Modern Payments Gateway where failure authorizations appeared to be successful [cody]
+* Fix Modern Payments Gateway [cody]
 * Use basic SkipJack host for all non-authorization transactions. Fix status method [cody]
 * Strip non alpha numeric chars out of MerchantWare order number [cody]
 * Parse complete response of Authorize.net CIM gateway [Patrick Joyce]
