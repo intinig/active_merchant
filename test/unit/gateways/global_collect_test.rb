@@ -74,6 +74,15 @@ class GlobalCollectTest < Test::Unit::TestCase
     assert response.test?
   end
   
+  def test_successful_hosted_authorize
+    @gateway.expects(:ssl_post).returns(successful_insert_order_with_payment_hosted_response)
+    
+    assert response = @gateway.authorize(@amount, credit_card(:type => :visa), @options.merge(:hosted => 1, :return_url => 'http://mikamai.com'))
+    assert_success response
+    
+    assert_equal 'https://ps.gcsip.nl/orb/orb?ACTION=DO_START&REF=000000444100000000050000100001&MAC=zTMKXFNMbpfmLGBbjhxmDUX6MB%2BFUEKwqCLx9wEMTXU%3D', response.params["form_action"]
+  end
+  
   def test_successful_authorize_with_secure_3d
     gateway = GlobalCollectGateway.new( :merchant => '1', :ip => '123.123.123.123', :test => true, :secure_3d => true)
     gateway.expects(:ssl_post).returns(successful_insert_order_with_payment_response)
@@ -618,6 +627,66 @@ class GlobalCollectTest < Test::Unit::TestCase
     XML
   end      
 
+  def successful_insert_order_with_payment_hosted_response
+    <<-XML
+    <XML>
+      <REQUEST>
+        <ACTION>INSERT_ORDERWITHPAYMENT</ACTION>
+        <META>
+          <IPADDRESS>123.123.123.123</IPADDRESS>
+          <MERCHANTID>1</MERCHANTID>
+          <VERSION>1.0</VERSION>
+          <REQUESTIPADDRESS>123.123.123.123</REQUESTIPADDRESS>
+        </META>
+        <PARAMS>
+          <ORDER>
+            <ORDERID>9998990013</ORDERID>
+            <MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
+            <AMOUNT>100</AMOUNT>
+            <CURRENCYCODE>EUR</CURRENCYCODE>
+            <COUNTRYCODE>NL</COUNTRYCODE>
+            <LANGUAGECODE>en</LANGUAGECODE>
+          </ORDER>
+          <PAYMENT>
+            <PAYMENTPRODUCTID>1</PAYMENTPRODUCTID>
+            <AMOUNT>100</AMOUNT>
+            <CURRENCYCODE>EUR</CURRENCYCODE>
+            <COUNTRYCODE>NL</COUNTRYCODE>
+            <LANGUAGECODE>en</LANGUAGECODE>
+            <HOSTEDINDICATOR>1</HOSTEDINDICATOR>
+            <RETURNURL>http://mikamai.com</RETURNURL>
+          </PAYMENT>
+        </PARAMS>
+        <RESPONSE>
+          <RESULT>OK</RESULT>
+          <META>
+            <REQUESTID>3003989</REQUESTID>
+            <RESPONSEDATETIME>20100202124108</RESPONSEDATETIME>
+          </META>
+          <ROW>
+            <REF>000000444100000000050000100001</REF>
+            <EFFORTID>1</EFFORTID>
+            <PAYMENTREFERENCE>0</PAYMENTREFERENCE>
+            <MAC>zTMKXFNMbpfmLGBbjhxmDUX6MB+FUEKwqCLx9wEMTXU=</MAC>
+            <STATUSDATE>20100202124108</STATUSDATE>
+            <STATUSID>20</STATUSID>
+            <ADDITIONALREFERENCE>5</ADDITIONALREFERENCE>
+            <FORMMETHOD>GET</FORMMETHOD>
+            <EXTERNALREFERENCE>5</EXTERNALREFERENCE>
+            <ATTEMPTID>1</ATTEMPTID>
+            <ORDERID>9998990013</ORDERID>
+            <RETURNMAC>
+            x/Ge+uH8VoyY2q0JGaS7WaLB2orbR/HF1zVev5KeRCk=</RETURNMAC>
+            <FORMACTION>
+            https://ps.gcsip.nl/orb/orb?ACTION=DO_START&REF=000000444100000000050000100001&MAC=zTMKXFNMbpfmLGBbjhxmDUX6MB%2BFUEKwqCLx9wEMTXU%3D</FORMACTION>
+            <MERCHANTID>1</MERCHANTID>
+          </ROW>
+        </RESPONSE>
+      </REQUEST>
+    </XML>
+    XML
+  end
+  
   def successful_insert_order_with_payment_response_with_secure_3d
     <<-XML
     <XML>
