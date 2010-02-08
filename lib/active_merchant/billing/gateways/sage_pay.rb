@@ -286,7 +286,9 @@ module ActiveMerchant #:nodoc:
       # Key2=value2
       def parse(body)
         result = {}
-        body.to_a.each { |pair| result[$1] = $2 if pair.strip =~ /\A([^=]+)=(.+)\Z/im }
+        body.to_s.each_line do |pair|
+          result[$1] = $2 if pair.strip =~ /\A([^=]+)=(.+)\Z/im
+        end
         result
       end
 
@@ -302,7 +304,6 @@ module ActiveMerchant #:nodoc:
         [ first_name[0,20], last_name[0,20] ]
       end
     end
-    ProtxGateway = SagePayGateway
   end
 end
 

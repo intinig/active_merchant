@@ -7,7 +7,7 @@ require 'rake/contrib/rubyforgepublisher'
 require File.join(File.dirname(__FILE__), 'lib', 'support', 'gateway_support')
 
 
-PKG_VERSION = "1.4.2"
+PKG_VERSION = "1.5.0"
 PKG_NAME = "activemerchant"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
@@ -42,8 +42,8 @@ end
 Rake::RDocTask.new do |rdoc|
   rdoc.rdoc_dir = 'doc'
   rdoc.title    = "ActiveMerchant library"
-  rdoc.options << '--line-numbers' << '--inline-source' << '--main=README'
-  rdoc.rdoc_files.include('README', 'CHANGELOG')
+  rdoc.options << '--line-numbers' << '--inline-source' << '--main=README.rdoc'
+  rdoc.rdoc_files.include('README.rdoc', 'CHANGELOG')
   rdoc.rdoc_files.include('lib/**/*.rb')
   rdoc.rdoc_files.exclude('lib/tasks')
 end

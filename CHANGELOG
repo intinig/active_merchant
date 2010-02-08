@@ -1,5 +1,22 @@
 = ActiveMerchant CHANGELOG
 
+== Version 1.5.0 (February 2, 2010)
+
+* Fix Gestpay notification to avoid Ruby 1.9 warnings [cody]
+* Fix Chronopay notification time parsing for Ruby 1.9 [Joe Van Dyk]
+* Set default currency of Braintree to USD [cody]
+* Fix QuickPay helper for Ruby 1.9 compat [cody]
+* Use String#each_line instead of collect in PaySecureGateway for Ruby 1.9 compat [cody]
+* Use String#each_line instead of to_a in SagePayGateway for Ruby 1.9 compat [cody]
+* Don't return an array when finding the country code. Fixes issue with Ruby 1.9 [cody]
+* Fix custom assertions for Ruby 1.9 [cody]
+* Deprecate Money objects [cody]
+* Update JCB rejex to catch all valid PANs [pjhyett]
+* Remove old TransaXGateway constant [cody]
+* Remove old ProtxGateway constant [cody]
+* Remove old BrainTree constant [cody]
+* Remove AuthorizedNet constant [cody]
+* SecurePay changed their delimeter from % to ,. Update gateway to handle changes [Soleone]
 * Fix documentation typo in base.rb [mig-hub]
 * Add capture test to Linkpoint [Dusty Doris]
 * Fix bug in Linkpoint with ternary operator and Ruby 1.9.1 [Dusty Doris]

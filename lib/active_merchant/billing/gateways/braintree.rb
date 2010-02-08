@@ -10,8 +10,8 @@ module ActiveMerchant #:nodoc:
       self.supported_cardtypes = [:visa, :master, :american_express, :discover]
       self.homepage_url = 'http://www.braintreepaymentsolutions.com'
       self.display_name = 'Braintree'
+      self.default_currency = 'USD'
     end
-    BrainTreeGateway = BraintreeGateway
   end
 end
 
