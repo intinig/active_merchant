@@ -9,7 +9,7 @@ module ActiveMerchant #:nodoc:
       
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       # FIXME Get a list of countries!
-      self.supported_countries = ['US']
+      self.supported_countries = ['IT', 'AT', 'BE', 'DK', 'FR', 'DE', 'FL', 'LX', 'NL', 'SE', 'MC', 'IR', 'PT', 'ES', 'GR', 'UK', 'CH', 'US']
       
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :discover, :american_express, :jcb, :switch, :solo, :dankort, :laser]
@@ -41,6 +41,7 @@ module ActiveMerchant #:nodoc:
       end
       
       # DO_VALIDATE
+      # Fixme: what is this for? Is it needed now?
       def authenticate(effort_id, attempt_id, signedpares, options = {})
         requires!(options, :order_id)
         response = commit(build_do_validate_request(options[:order_id], effort_id, attempt_id, signedpares))

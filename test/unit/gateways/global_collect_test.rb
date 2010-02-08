@@ -9,7 +9,7 @@ class GlobalCollectTest < Test::Unit::TestCase
      )
 
     @credit_card = credit_card(4567350000427977, :month => 12, :year => 2006, :type => :visa)
-    @amount = Money.new(29990, 'USD')
+    @amount = 100
     
     @options = { 
       :order_id => '9998990013',
@@ -36,13 +36,18 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
     
   def test_authorize_should_build_successful_request
-    request = @gateway.send(:build_authorize_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
+    request = @gateway.send(:build_authorize_request, 100, @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
+    assert_equal_xml successful_authorize_request, request
+  end
+  
+  def test_authorize_should_build_successful_hosted_request
+    request = @gateway.send(:build_authorize_request, 100, @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
     assert_equal_xml successful_authorize_request, request
   end
   
   def test_authorize_should_build_successful_request_using_secure_3d
     gateway = GlobalCollectGateway.new( :merchant => '1', :ip => '123.123.123.123', :test => true, :secure_3d => true)
-    request = gateway.send(:build_authorize_request, Money.new(29990, 'EUR'), @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
+    request = gateway.send(:build_authorize_request, 100, @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
     assert_equal_xml successful_authorize_request_with_secure_3d, request
   end
   
@@ -131,7 +136,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
   
   def test_capture_should_build_successful_request
-    request = @gateway.send(:build_capture_request, Money.new(29990, 'EUR'), 9998990013, 1)
+    request = @gateway.send(:build_capture_request, 100, 9998990013, 1)
     assert_equal_xml successful_set_payment_request, request
   end
   
@@ -387,14 +392,14 @@ class GlobalCollectTest < Test::Unit::TestCase
           <ORDER>
             <ORDERID>9998990013</ORDERID>
             <MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
-            <AMOUNT>29990</AMOUNT>
+            <AMOUNT>100</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
             <COUNTRYCODE>NL</COUNTRYCODE>
             <LANGUAGECODE>en</LANGUAGECODE>
           </ORDER>
           <PAYMENT>
             <PAYMENTPRODUCTID>1</PAYMENTPRODUCTID>
-            <AMOUNT>29990</AMOUNT>
+            <AMOUNT>100</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
             <CREDITCARDNUMBER>4567350000427977</CREDITCARDNUMBER>
             <EXPIRYDATE>1206</EXPIRYDATE>
@@ -421,14 +426,14 @@ class GlobalCollectTest < Test::Unit::TestCase
           <ORDER>
             <ORDERID>9998990013</ORDERID>
             <MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
-            <AMOUNT>29990</AMOUNT>
+            <AMOUNT>100</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
             <COUNTRYCODE>NL</COUNTRYCODE>
             <LANGUAGECODE>en</LANGUAGECODE>
           </ORDER>
           <PAYMENT>
             <PAYMENTPRODUCTID>1</PAYMENTPRODUCTID>
-            <AMOUNT>29990</AMOUNT>
+            <AMOUNT>100</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
             <CREDITCARDNUMBER>4567350000427977</CREDITCARDNUMBER>
             <EXPIRYDATE>1206</EXPIRYDATE>
@@ -541,7 +546,7 @@ class GlobalCollectTest < Test::Unit::TestCase
           <ORDER>
             <ORDERID>9998990013</ORDERID>
             <MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
-            <AMOUNT>29990</AMOUNT>
+            <AMOUNT>100</AMOUNT>
             <CURRENCYCODE>EUR</CURRENCYCODE>
             <COUNTRYCODE>NL</COUNTRYCODE>
             <LANGUAGECODE>nl</LANGUAGECODE>
