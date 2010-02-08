@@ -226,8 +226,9 @@ module ActiveMerchant #:nodoc:
       end
 
       def add_order(post, money, options = {})
-        requires!(options, :order_id, :address)
-        requires!(options[:address], :country)
+        requires!(options, :order_id)
+        requires!(options, :address) 
+        requires!(options[:address], :country) 
         post.ORDER do
           post.ORDERID(options[:order_id])
           # Possible Global Collect bug? Requires this Key.
@@ -241,14 +242,17 @@ module ActiveMerchant #:nodoc:
       end
       
       def add_authorize_payment(post, money, creditcard, options = {}) 
+        requires!(options, :return_url) if options[:hosted]
         post.PAYMENT do |payment|
           payment.PAYMENTPRODUCTID(credit_card_type(creditcard))
           payment.AMOUNT(amount(money))
           payment.CURRENCYCODE(options[:currency] || currency(money))
-          payment.CREDITCARDNUMBER(creditcard.number)
-          payment.EXPIRYDATE(expiration(creditcard))
-          payment.COUNTRYCODE(options[:address][:country])
+          payment.CREDITCARDNUMBER(creditcard.number) unless options[:hosted]
+          payment.EXPIRYDATE(expiration(creditcard)) unless options[:hosted]
+          payment.COUNTRYCODE(options[:address][:country]) 
           payment.LANGUAGECODE("en")
+          payment.HOSTEDINDICATOR("1") if options[:hosted]
+          payment.RETURNURL(options[:return_url]) if options[:hosted]
           payment.AUTHENTICATIONINDICATOR(1) if @options[:secure_3d]
         end
       end

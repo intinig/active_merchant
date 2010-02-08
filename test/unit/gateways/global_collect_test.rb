@@ -41,8 +41,8 @@ class GlobalCollectTest < Test::Unit::TestCase
   end
   
   def test_authorize_should_build_successful_hosted_request
-    request = @gateway.send(:build_authorize_request, 100, @credit_card, {:order_id => '9998990013', :address => {:country => 'NL'}})
-    assert_equal_xml successful_authorize_request, request
+    request = @gateway.send(:build_authorize_request, 100, @credit_card, {:order_id => '9998990013', :hosted => true, :address => {:country => 'NL'}, :return_url => 'http://mikamai.com'})
+    assert_equal_xml successful_hosted_authorize_request, request
   end
   
   def test_authorize_should_build_successful_request_using_secure_3d
@@ -408,6 +408,40 @@ class GlobalCollectTest < Test::Unit::TestCase
           </PAYMENT>
         </PARAMS>
       </REQUEST>
+    </XML>
+    XML
+  end
+  
+  def successful_hosted_authorize_request
+    <<-XML
+    <XML>
+    	<REQUEST> 
+    		<ACTION>INSERT_ORDERWITHPAYMENT</ACTION>
+    		<META>
+    			<MERCHANTID>1</MERCHANTID> 
+    			<IPADDRESS>123.123.123.123</IPADDRESS> 
+    			<VERSION>1.0</VERSION>
+    		</META>
+    		<PARAMS>
+    			<ORDER>
+    				<ORDERID>9998990013</ORDERID> 
+    				<MERCHANTREFERENCE>9998990013</MERCHANTREFERENCE>
+    				<AMOUNT>100</AMOUNT> 
+    				<CURRENCYCODE>EUR</CURRENCYCODE> 
+    				<COUNTRYCODE>NL</COUNTRYCODE> 
+    				<LANGUAGECODE>en</LANGUAGECODE>
+    			</ORDER> 
+    			<PAYMENT>
+    				<PAYMENTPRODUCTID>1</PAYMENTPRODUCTID> 
+    				<AMOUNT>100</AMOUNT> 
+    				<CURRENCYCODE>EUR</CURRENCYCODE> 
+    				<COUNTRYCODE>NL</COUNTRYCODE> 
+    				<LANGUAGECODE>en</LANGUAGECODE>
+    				<HOSTEDINDICATOR>1</HOSTEDINDICATOR>
+    				<RETURNURL>http://mikamai.com</RETURNURL>
+    			</PAYMENT> 
+    		</PARAMS>
+    	</REQUEST>
     </XML>
     XML
   end
