@@ -77,7 +77,7 @@ class GlobalCollectTest < Test::Unit::TestCase
   def test_successful_hosted_authorize
     @gateway.expects(:ssl_post).returns(successful_insert_order_with_payment_hosted_response)
     
-    assert response = @gateway.authorize(@amount, credit_card(:type => :visa), @options.merge(:hosted => 1, :return_url => 'http://mikamai.com'))
+    assert response = @gateway.authorize(@amount, CreditCard.new(:type => :visa), @options.merge(:hosted => 1, :return_url => 'http://mikamai.com'))
     assert_success response
     
     assert_equal 'https://ps.gcsip.nl/orb/orb?ACTION=DO_START&REF=000000444100000000050000100001&MAC=zTMKXFNMbpfmLGBbjhxmDUX6MB%2BFUEKwqCLx9wEMTXU%3D', response.params["form_action"]

@@ -10,7 +10,7 @@ module ActiveMerchant #:nodoc:
       # The countries the gateway supports merchants from as 2 digit ISO country codes
       # FIXME Get a list of countries!
       self.supported_countries = ['IT', 'AT', 'BE', 'DK', 'FR', 'DE', 'FL', 'LX', 'NL', 'SE', 'MC', 'IR', 'PT', 'ES', 'GR', 'UK', 'CH', 'US']
-      
+            
       # The card types supported by the payment gateway
       self.supported_cardtypes = [:visa, :master, :discover, :american_express, :jcb, :switch, :solo, :dankort, :laser]
 
@@ -30,7 +30,7 @@ module ActiveMerchant #:nodoc:
       # it is used to check for the correct url to use
       def initialize(options = {})
         requires!(options, :merchant, :ip)
-        @options = {:security => :ip_check}.merge(options)
+        @options = {:security => :ip_check, :language => 'en'}.merge(options)
         super
       end
       
@@ -237,7 +237,7 @@ module ActiveMerchant #:nodoc:
           post.CURRENCYCODE(options[:currency] || currency(money))
           post.COUNTRYCODE(options[:address][:country])
           # Forcing to EN
-          post.LANGUAGECODE("en")
+          post.LANGUAGECODE(options[:language])
         end
       end
       
@@ -288,7 +288,7 @@ module ActiveMerchant #:nodoc:
         md         = get_key_from_response(response, "ROW/MD")
         attempt_id = get_key_from_response(response, "ROW/ATTEMPTID")
         effort_id  = get_key_from_response(response, "ROW/EFFORTID")
-        form_action = get_key_from_response(response, "ROW/FORMACTION").strip
+        form_action = get_key_from_response(response, "ROW/FORMACTION").to_s.strip
         
         [success, message, {:authorization => authorization, :fraud_review => fraud_review, :avs_result => avs_result, :cvv_result => cvv_result, :request_id => request_id, :acs_url => acs_url, :pareq => pareq, :md => md, :attempt_id => attempt_id, :effort_id => effort_id, :form_action => form_action}]
       end     
@@ -339,7 +339,7 @@ module ActiveMerchant #:nodoc:
       def credit_card_type(creditcard)
         {:visa => 1, :master => 3, :discover => 128, :american_express => 2, :jcb => 125, :switch => 117, :solo => 118,  :dankort => 123, :laser => 124}[creditcard.type.to_sym]
       end
-      
+            
       # Should run against the test servers or not?
       def test?
         if @options[:test].nil?
