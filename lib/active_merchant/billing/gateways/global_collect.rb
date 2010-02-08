@@ -236,8 +236,7 @@ module ActiveMerchant #:nodoc:
           post.AMOUNT(amount(money))
           post.CURRENCYCODE(options[:currency] || currency(money))
           post.COUNTRYCODE(options[:address][:country])
-          # Forcing to EN
-          post.LANGUAGECODE(options[:language])
+          post.LANGUAGECODE(@options[:language])
         end
       end
       
@@ -250,7 +249,7 @@ module ActiveMerchant #:nodoc:
           payment.CREDITCARDNUMBER(creditcard.number) unless options[:hosted]
           payment.EXPIRYDATE(expiration(creditcard)) unless options[:hosted]
           payment.COUNTRYCODE(options[:address][:country]) 
-          payment.LANGUAGECODE("en")
+          payment.LANGUAGECODE(@options[:language])
           payment.HOSTEDINDICATOR("1") if options[:hosted]
           payment.RETURNURL(options[:return_url]) if options[:hosted]
           payment.AUTHENTICATIONINDICATOR(1) if @options[:secure_3d]
