@@ -94,8 +94,6 @@ module ActiveMerchant #:nodoc:
       # TODO
       # def void
       
-      private  
-      
       def retrieve_order(order_id)
         order = parse_order(ssl_post(global_collect_url, build_get_order_status_request(order_id)))
         if order[:success]
@@ -104,6 +102,9 @@ module ActiveMerchant #:nodoc:
           Response.new(order[:success], order[:message], {}, {:test => test?}) unless order[:success]
         end
       end                           
+
+      private  
+      
       
       def build_authorize_request(money, creditcard, options)
         build_request do |request|
