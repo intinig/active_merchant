@@ -12,7 +12,7 @@ module ActiveMerchant #:nodoc:
       self.supported_countries = ['IT', 'AT', 'BE', 'DK', 'FR', 'DE', 'FL', 'LX', 'NL', 'SE', 'MC', 'IR', 'PT', 'ES', 'GR', 'UK', 'CH', 'US']
             
       # The card types supported by the payment gateway
-      self.supported_cardtypes = [:visa, :master, :discover, :american_express, :jcb, :switch, :solo, :dankort, :laser]
+      self.supported_cardtypes = [:visa, :master, :discover, :american_express, :jcb, :switch, :solo, :dankort, :laser, :visa_electron, :maestro]
 
       # The homepage URL of the gateway
       self.homepage_url = 'http://globalcollect.nl'
@@ -340,7 +340,7 @@ module ActiveMerchant #:nodoc:
       end
             
       def credit_card_type(creditcard)
-        {:visa => 1, :master => 3, :discover => 128, :american_express => 2, :jcb => 125, :switch => 117, :solo => 118,  :dankort => 123, :laser => 124}[creditcard.type.to_sym]
+        {:visa => 1, :master => 3, :discover => 128, :american_express => 2, :jcb => 125, :switch => 117, :solo => 118,  :dankort => 123, :laser => 124, :visa_electron => 122, :maestro => 117}[creditcard.type.to_sym]
       end
             
       # Should run against the test servers or not?
