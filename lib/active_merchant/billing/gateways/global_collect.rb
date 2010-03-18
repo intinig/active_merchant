@@ -289,8 +289,11 @@ module ActiveMerchant #:nodoc:
         attempt_id = get_key_from_response(response, "ROW/ATTEMPTID")
         effort_id  = get_key_from_response(response, "ROW/EFFORTID")
         form_action = get_key_from_response(response, "ROW/FORMACTION").to_s.strip
-        
-        [success, message, {:authorization => authorization, :fraud_review => fraud_review, :avs_result => avs_result, :cvv_result => cvv_result, :request_id => request_id, :acs_url => acs_url, :pareq => pareq, :md => md, :attempt_id => attempt_id, :effort_id => effort_id, :form_action => form_action}]
+        #LUCAT Added these
+        return_mac = get_key_from_response(response, "ROW/RETURNMAC").to_s.strip
+        ref = get_key_from_response(response, "ROW/REF").to_s.strip
+
+        [success, message, {:authorization => authorization, :fraud_review => fraud_review, :avs_result => avs_result, :cvv_result => cvv_result, :request_id => request_id, :acs_url => acs_url, :pareq => pareq, :md => md, :attempt_id => attempt_id, :effort_id => effort_id, :form_action => form_action, :return_mac => return_mac, :ref => ref}]
       end     
       
       def parse_order(body)
